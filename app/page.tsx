@@ -1,101 +1,97 @@
-import Image from "next/image";
+"use client"
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { MenuCarousel } from '@/components/MenuCarousel'
+
+const specialties = [
+  { name: 'Signature Dish 1', image: '/images/appetizer1.jpg' },
+  { name: 'Signature Dish 2', image: '/images/main-course1.jpg' },
+  { name: 'Signature Dish 3', image: '/images/dessert1.jpg' },
+]
+
+const menuItems = [
+  { name: 'Appetizer 1', description: 'Delicious appetizer description', price: '$10', image: '/images/appetizer1.jpg' },
+  { name: 'Main Course 1', description: 'Mouth-watering main course description', price: '$25', image: '/images/main-course1.jpg' },
+  { name: 'Dessert 1', description: 'Sweet dessert description', price: '$8', image: '/images/dessert1.jpg' },
+  { name: 'Appetizer 2', description: 'Another tasty appetizer', price: '$12', image: '/images/appetizer1.jpg' },
+  { name: 'Main Course 2', description: 'Savory main course option', price: '$22', image: '/images/main-course1.jpg' },
+  { name: 'Dessert 2', description: 'Indulgent dessert choice', price: '$9', image: '/images/dessert1.jpg' },
+]
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="container mx-auto px-6 py-12">
+      <motion.section 
+        className="text-center mb-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">Welcome to Wajabatt Food</h1>
+        <p className="text-xl text-muted-foreground mb-8">Experience exquisite cuisine in a warm, inviting atmosphere</p>
+        <div className="flex justify-center space-x-4">
+          <Button asChild>
+            <Link href="/reservations">Reserve a Table</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/menu">View Menu</Link>
+          </Button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </motion.section>
+
+      <motion.section 
+        className="mb-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <h2 className="text-3xl font-bold mb-6 text-center">Our Specialties</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {specialties.map((dish, index) => (
+            <motion.div 
+              key={index} 
+              className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Image src={dish.image} alt={dish.name} width={300} height={200} className="w-full" />
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2">{dish.name}</h3>
+                <p className="text-muted-foreground">A delicious description of our signature dish goes here.</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <h2 className="text-3xl font-bold mb-6 text-center">Featured Menu Items</h2>
+        <MenuCarousel items={menuItems} />
+      </motion.section>
+
+      <motion.section 
+        className="text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      >
+        <h2 className="text-3xl font-bold mb-6">Hours & Location</h2>
+        <p className="text-xl mb-4">123 Foodie Street, Culinary City</p>
+        <p className="text-lg mb-2">Monday - Friday: 11am - 10pm</p>
+        <p className="text-lg mb-4">Saturday - Sunday: 10am - 11pm</p>
+        <Button asChild variant="outline">
+          <Link href="/contact">Contact Us</Link>
+        </Button>
+      </motion.section>
     </div>
-  );
+  )
 }
+
