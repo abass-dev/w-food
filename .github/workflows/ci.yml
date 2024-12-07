@@ -16,6 +16,7 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: "20"
-      - run: npm ci
-      - run: npm run build --legacy-peer-deps
+
+      - run: npm ci --legacy-peer-deps
+      - run: npm run build
       - run: npm run lint
