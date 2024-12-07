@@ -1,15 +1,29 @@
-version: '3'
+version: '3.8'
+
 services:
-  w-food:
-    image: node:20-alpine
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    working_dir: /usr/src/app
+  app:
+    build: .
     ports:
       - "3000:3000"
-    env_file:
-      - .env  
-    stdin_open: true
-    tty: true
-    command: sh -c "npm install --legacy-peer-deps && npm run dev"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=w_food_db_owner
+      - POSTGRES_PASSWORD=D0tfV8xoyeAj
+      - POSTGRES_DB=w_food_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
