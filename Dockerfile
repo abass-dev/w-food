@@ -7,14 +7,18 @@ WORKDIR /app
 # Install git and other necessary tools
 RUN apk add --no-cache git
 
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 # Copy package.json and package-lock.json (if available)
-COPY package*.json ./
+COPY --chown=appuser:appgroup package*.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application code
-COPY . .
+COPY --chown=appuser:appgroup . .
 
 # Build the Next.js application
 RUN npm run build

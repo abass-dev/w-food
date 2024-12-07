@@ -5,7 +5,10 @@ import { convertPrismaItem } from '@/lib/utils'
 export async function GET() {
   try {
     const categories = await prisma.menuCategory.findMany()
-    return NextResponse.json(categories)
+
+    const categoriesItems = categories.map(convertPrismaItem)
+
+    return NextResponse.json(categoriesItems)
   } catch (error) {
     console.error('Error fetching categories:', error)
     return NextResponse.json({ error: 'Error fetching categories' }, { status: 500 })

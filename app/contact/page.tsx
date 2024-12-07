@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -31,7 +31,7 @@ export default function ContactPage() {
 
   return (
     <div className="container mx-auto px-6 py-12">
-      <motion.h1 
+      <motion.h1
         className="text-4xl font-bold mb-8 text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -40,7 +40,7 @@ export default function ContactPage() {
         Contact Us
       </motion.h1>
       <div className="flex flex-col md:flex-row gap-12">
-        <motion.div 
+        <motion.div
           className="md:w-1/2"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -63,7 +63,7 @@ export default function ContactPage() {
             <Button type="submit">Send Message</Button>
           </form>
         </motion.div>
-        <motion.div 
+        <motion.div
           className="md:w-1/2"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
