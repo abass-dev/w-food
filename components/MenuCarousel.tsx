@@ -7,13 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-interface MenuItem {
-  name: string
-  description: string
-  price: string
-  image: string
-}
+import { MenuItem } from '@/types/menu'
 
 interface MenuCarouselProps {
   items: MenuItem[]
@@ -21,6 +15,7 @@ interface MenuCarouselProps {
 
 export function MenuCarousel({ items }: MenuCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
+
   const scrollPrev = React.useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev()
   }, [emblaApi])
@@ -33,8 +28,8 @@ export function MenuCarousel({ items }: MenuCarouselProps) {
     <div className="relative">
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex">
-          {items.map((item, index) => (
-            <div key={index} className="flex-[0_0_100%] min-w-0 pl-4 md:flex-[0_0_50%] lg:flex-[0_0_33.33%]">
+          {items.map((item) => (
+            <div key={item.id} className="flex-[0_0_100%] min-w-0 pl-4 md:flex-[0_0_50%] lg:flex-[0_0_33.33%]">
               <Card>
                 <CardContent className="p-4">
                   <AspectRatio ratio={16 / 9}>
@@ -47,7 +42,7 @@ export function MenuCarousel({ items }: MenuCarouselProps) {
                   </AspectRatio>
                   <h3 className="mt-2 text-lg font-semibold">{item.name}</h3>
                   <p className="text-sm text-muted-foreground">{item.description}</p>
-                  <p className="mt-2 font-bold">{item.price}</p>
+                  <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
                 </CardContent>
               </Card>
             </div>

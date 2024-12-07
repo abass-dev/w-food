@@ -6,24 +6,20 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { MenuCarousel } from '@/components/MenuCarousel'
-
-interface MenuItem {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-}
+import { MenuItem } from '@/types/menu'
 
 export default function Home() {
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([])
 
   useEffect(() => {
     async function fetchFeaturedItems() {
-      const response = await fetch('/api/featured-menu')
-      const data = await response.json()
-      setFeaturedItems(data)
-      alert(data)
+      try {
+        const response = await fetch('/api/featured-menu')
+        const data = await response.json()
+        setFeaturedItems(data)
+      } catch (error) {
+        console.error('Error fetching featured items:', error)
+      }
     }
     fetchFeaturedItems()
   }, [])
@@ -68,6 +64,7 @@ export default function Home() {
                 <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
                 <p className="text-muted-foreground">{item.description}</p>
                 <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground mt-1">Category: {item.category.name}</p>
               </div>
             </motion.div>
           ))}

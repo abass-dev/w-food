@@ -1,22 +1,25 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { Prisma } from '@prisma/client'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatPrice(price: number | string | null | undefined): number {
+export function formatPrice(price: Prisma.Decimal | number | string | null | undefined): number {
+  if (typeof price === 'object' && price !== null && 'toNumber' in price) {
+    return price.toNumber()
+  }
   if (typeof price === 'number') {
     return price
   }
   if (typeof price === 'string') {
-    const parsedPrice = parseFloat(price)
-    return isNaN(parsedPrice) ? 0 : parsedPrice
+    return parseFloat(price)
   }
   return 0
 }
 
-export function convertPrismaItem<T extends { price: any }>(item: T): Omit<T, 'price'> & { price: number } {
+export function convertPrismaItem<T extends { price: Prisma.Decimal }>(item: T): Omit<T, 'price'> & { price: number } {
   return {
     ...item,
     price: formatPrice(item.price)
