@@ -1,27 +1,33 @@
 "use client"
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { MenuCarousel } from '@/components/MenuCarousel'
 
-const specialties = [
-  { name: 'Signature Dish 1', image: '/images/appetizer1.jpg' },
-  { name: 'Signature Dish 2', image: '/images/main-course1.jpg' },
-  { name: 'Signature Dish 3', image: '/images/dessert1.jpg' },
-]
-
-const menuItems = [
-  { name: 'Appetizer 1', description: 'Delicious appetizer description', price: '$10', image: '/images/appetizer1.jpg' },
-  { name: 'Main Course 1', description: 'Mouth-watering main course description', price: '$25', image: '/images/main-course1.jpg' },
-  { name: 'Dessert 1', description: 'Sweet dessert description', price: '$8', image: '/images/dessert1.jpg' },
-  { name: 'Appetizer 2', description: 'Another tasty appetizer', price: '$12', image: '/images/appetizer1.jpg' },
-  { name: 'Main Course 2', description: 'Savory main course option', price: '$22', image: '/images/main-course1.jpg' },
-  { name: 'Dessert 2', description: 'Indulgent dessert choice', price: '$9', image: '/images/dessert1.jpg' },
-]
+interface MenuItem {
+  id: string
+  name: string
+  description: string
+  price: number
+  image: string
+}
 
 export default function Home() {
+  const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([])
+
+  useEffect(() => {
+    async function fetchFeaturedItems() {
+      const response = await fetch('/api/featured-menu')
+      const data = await response.json()
+      setFeaturedItems(data)
+      alert(data)
+    }
+    fetchFeaturedItems()
+  }, [])
+
   return (
     <div className="container mx-auto px-6 py-12">
       <motion.section 
@@ -50,17 +56,18 @@ export default function Home() {
       >
         <h2 className="text-3xl font-bold mb-6 text-center">Our Specialties</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {specialties.map((dish, index) => (
+          {featuredItems.map((item) => (
             <motion.div 
-              key={index} 
+              key={item.id} 
               className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Image src={dish.image} alt={dish.name} width={300} height={200} className="w-full" />
+              <Image src={item.image} alt={item.name} width={300} height={200} className="w-full" />
               <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{dish.name}</h3>
-                <p className="text-muted-foreground">A delicious description of our signature dish goes here.</p>
+                <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+                <p className="text-muted-foreground">{item.description}</p>
+                <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
               </div>
             </motion.div>
           ))}
@@ -74,7 +81,7 @@ export default function Home() {
         transition={{ delay: 0.4, duration: 0.5 }}
       >
         <h2 className="text-3xl font-bold mb-6 text-center">Featured Menu Items</h2>
-        <MenuCarousel items={menuItems} />
+        <MenuCarousel items={featuredItems} />
       </motion.section>
 
       <motion.section 

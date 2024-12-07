@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  address     String
+  phone       String
+  email       String
+  openingHours Json
+  menuCategories MenuCategory[]
+  orders      Order[]
+}
+
+model MenuCategory {
+  id          String   @id @default(cuid())
+  name        String
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+  menuItems   MenuItem[]
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Decimal
+  image       String
+  category    MenuCategory @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      OrderStatus
+  total       Decimal
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  String
+  orderItems  OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  quantity    Int
+  price       Decimal
+  order       Order    @relation(fields: [orderId], references: [id])
+  orderId     String
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId  String
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  orders      Order[]
+  cart        Cart?
+}
+
+model Cart {
+  id          String   @id @default(cuid())
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  String   @unique
+  cartItems   CartItem[]
+}
+
+model CartItem {
+  id          String   @id @default(cuid())
+  quantity    Int
+  cart        Cart     @relation(fields: [cartId], references: [id])
+  cartId      String
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId  String
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+

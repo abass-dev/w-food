@@ -21,7 +21,6 @@ interface MenuCarouselProps {
 
 export function MenuCarousel({ items }: MenuCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
-
   const scrollPrev = React.useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev()
   }, [emblaApi])

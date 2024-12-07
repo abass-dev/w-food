@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { toast } from '@/hooks/use-toast'
+import { Toast } from '@/components/ui/toast'
 
 export default function ReservationsPage() {
   const [formData, setFormData] = useState({
@@ -27,7 +27,7 @@ export default function ReservationsPage() {
     setTimeout(() => {
       const isAvailable = Math.random() < 0.7 // 70% chance of availability
       setAvailability(isAvailable)
-      toast({
+      Toast({
         title: isAvailable ? "Table available!" : "Sorry, no tables available.",
         description: isAvailable ? "You can proceed with your reservation." : "Please try a different date or time.",
       })
@@ -38,7 +38,7 @@ export default function ReservationsPage() {
     e.preventDefault()
     // Handle form submission (e.g., send data to server)
     console.log('Form submitted:', formData)
-    toast({
+    Toast({
       title: "Reservation submitted",
       description: "We'll confirm your reservation shortly.",
     })

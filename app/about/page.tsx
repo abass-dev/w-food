@@ -21,7 +21,7 @@ export default function AboutPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Image src="/images/appetizer1.jpg" alt="Restaurant Interior" width={600} height={400} className="rounded-lg shadow-md" />
+          <Image src="/placeholder.svg?height=400&width=600" alt="Restaurant Interior" width={600} height={400} className="rounded-lg shadow-md" />
         </motion.div>
         <motion.div 
           className="md:w-1/2"
@@ -53,7 +53,7 @@ export default function AboutPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.8 + index * 0.2 }}
             >
-              <Image src={`/images/appetizer1.jpg`} alt={role} width={200} height={200} className="rounded-full mx-auto mb-4" />
+              <Image src={`/placeholder.svg?height=200&width=200`} alt={role} width={200} height={200} className="rounded-full mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">{role}</h3>
               <p className="text-muted-foreground">A brief description of the chef and their expertise goes here.</p>
             </motion.div>

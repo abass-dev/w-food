@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { toast } from '@/hooks/use-toast'
-
+import { toast } from '@/components/ui/use-toast'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -78,7 +77,7 @@ export default function ContactPage() {
           <p className="mb-4">Saturday - Sunday: 10am - 11pm</p>
           <div className="aspect-w-16 aspect-h-9">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3878.5247432085616!2d2.084402774648137!3d13.564720686807867!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x11da9f917b67ec41%3A0x1f5e6e5241e25590!2sWAJABATT%20FOOD!5e0!3m2!1sfr!2sne!4v1733360326962!5m2!1sfr!2sne"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968459391!3d40.74844797932881!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1621538241539!5m2!1sen!2sus"
               width="100%"
               height="300"
               style={{ border: 0 }}
