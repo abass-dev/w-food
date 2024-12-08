@@ -53,20 +53,21 @@ export default function Home() {
         <h2 className="text-3xl font-bold mb-6 text-center">Our Specialties</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {featuredItems.map((item) => (
-            <motion.div 
-              key={item.id} 
-              className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Image src={item.image} alt={item.name} width={300} height={200} className="w-full" />
-              <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
-                <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground mt-1">Category: {item.category.name}</p>
-              </div>
-            </motion.div>
+            <Link href={`/menu/${item.id}`} key={item.id}>
+              <motion.div 
+                className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Image src={item.image} alt={item.name} width={300} height={200} className="w-full" />
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+                  <p className="text-muted-foreground">{item.description}</p>
+                  <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Category: {item.category.name}</p>
+                </div>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </motion.section>

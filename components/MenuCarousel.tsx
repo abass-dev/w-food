@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import useEmblaCarousel from 'embla-carousel-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -30,21 +31,24 @@ export function MenuCarousel({ items }: MenuCarouselProps) {
         <div className="flex">
           {items.map((item) => (
             <div key={item.id} className="flex-[0_0_100%] min-w-0 pl-4 md:flex-[0_0_50%] lg:flex-[0_0_33.33%]">
-              <Card>
-                <CardContent className="p-4">
-                  <AspectRatio ratio={16 / 9}>
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="rounded-md object-cover"
-                    />
-                  </AspectRatio>
-                  <h3 className="mt-2 text-lg font-semibold">{item.name}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
-                  <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
-                </CardContent>
-              </Card>
+              <Link href={`/menu/${item.id}`}>
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300">
+                  <CardContent className="p-4">
+                    <AspectRatio ratio={16 / 9}>
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="rounded-md object-cover"
+                      />
+                    </AspectRatio>
+                    <h3 className="mt-2 text-lg font-semibold">{item.name}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Category: {item.category.name}</p>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
           ))}
         </div>

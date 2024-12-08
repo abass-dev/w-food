@@ -5,7 +5,15 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/mode-toggle'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ShoppingCart } from 'lucide-react'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/lib/redux/store'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Cart } from '@/components/Cart'
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -17,6 +25,8 @@ const navItems = [
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
+  const cartItems = useSelector((state: RootState) => state.cart.items)
+  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   const toggleMenu = () => setIsOpen(!isOpen)
 
@@ -36,6 +46,21 @@ export default function Header() {
           </div>
           <div className="flex items-center space-x-2">
             <ModeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <Cart />
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="hidden md:block">
               <Button variant="outline">Order Now</Button>
               <Button className="ml-2">Reserve</Button>

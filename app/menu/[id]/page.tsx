@@ -6,16 +6,12 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { MenuItem } from '@/types/menu'
-import { useDispatch } from 'react-redux'
-import { addToCart } from '@/lib/redux/cartSlice'
-import { toast } from '@/hooks/use-toast'
 
 export default function MenuItemPage() {
   const [menuItem, setMenuItem] = useState<MenuItem | null>(null)
   const [quantity, setQuantity] = useState(1)
   const params = useParams()
   const router = useRouter()
-  const dispatch = useDispatch()
 
   useEffect(() => {
     async function fetchMenuItem() {
@@ -28,6 +24,7 @@ export default function MenuItemPage() {
         setMenuItem(data)
       } catch (error) {
         console.error('Error fetching menu item:', error)
+        // Redirect to menu page if item not found
         router.push('/menu')
       }
     }
@@ -35,15 +32,9 @@ export default function MenuItemPage() {
   }, [params.id, router])
 
   const handleAddToCart = () => {
-    if (menuItem) {
-      for (let i = 0; i < quantity; i++) {
-        dispatch(addToCart(menuItem))
-      }
-      toast({
-        title: "Added to cart",
-        description: `${quantity} ${menuItem.name} added to your cart.`,
-      })
-    }
+    // TODO: Implement actual cart functionality
+    console.log(`Added ${quantity} ${menuItem?.name} to cart`)
+    alert(`Added ${quantity} ${menuItem?.name} to cart`)
   }
 
   if (!menuItem) {
