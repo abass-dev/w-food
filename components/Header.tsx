@@ -5,15 +5,8 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/mode-toggle'
-import { Menu, X, ShoppingCart } from 'lucide-react'
-import { useSelector } from 'react-redux'
-import { RootState } from '@/lib/redux/store'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Cart } from '@/components/Cart'
+import { Menu, X } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -25,10 +18,10 @@ const navItems = [
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
-  const cartItems = useSelector((state: RootState) => state.cart.items)
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   const toggleMenu = () => setIsOpen(!isOpen)
+
+  const { data: session } = useSession()
 
   return (
     <header className="bg-background shadow-md">
@@ -43,24 +36,19 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            {session ? (
+              <>
+                <span className="mr-2">Welcome, {session.user?.name || 'User'}</span>
+                <Button variant="outline" onClick={() => signOut()}>Logout</Button>
+              </>
+            ) : (
+              <Button variant="outline" asChild>
+                <Link href="/login">Login</Link>
+              </Button>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <ModeToggle />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="relative">
-                  <ShoppingCart className="h-5 w-5" />
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <Cart />
-              </DropdownMenuContent>
-            </DropdownMenu>
             <div className="hidden md:block">
               <Button variant="outline">Order Now</Button>
               <Button className="ml-2">Reserve</Button>
@@ -91,6 +79,15 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
+              {session ? (
+                <>
+                  <Button variant="outline" onClick={() => signOut()} className="w-full">Logout</Button>
+                </>
+              ) : (
+                <Button variant="outline" asChild className="w-full">
+                  <Link href="/login">Login</Link>
+                </Button>
+              )}
               <Button variant="outline" className="w-full">Order Now</Button>
               <Button className="w-full">Reserve</Button>
             </div>

@@ -4,11 +4,13 @@ import { convertPrismaItem } from '@/lib/utils'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params
+
   try {
     const menuItem = await prisma.menuItem.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { category: true },
     })
 

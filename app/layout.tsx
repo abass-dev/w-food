@@ -3,7 +3,9 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import AuthProvider from '@/components/AuthProvider'
 import { Providers } from '@/components/Providers'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,13 +28,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <AuthProvider>
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <Header />
+           <Header />
             <main className="min-h-screen">{children}</main>
             <Footer />
+            <Toaster />
           </ThemeProvider>
-        </Providers>
+          </Providers>
+        </AuthProvider>
       </body>
     </html>
   )

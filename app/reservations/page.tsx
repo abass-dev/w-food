@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Toast } from '@/components/ui/toast'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function ReservationsPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +17,7 @@ export default function ReservationsPage() {
   })
 
   const [availability, setAvailability] = useState(null)
+  const { toast } = useToast()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -27,7 +28,7 @@ export default function ReservationsPage() {
     setTimeout(() => {
       const isAvailable = Math.random() < 0.7 // 70% chance of availability
       setAvailability(isAvailable)
-      Toast({
+      toast({
         title: isAvailable ? "Table available!" : "Sorry, no tables available.",
         description: isAvailable ? "You can proceed with your reservation." : "Please try a different date or time.",
       })
@@ -38,7 +39,7 @@ export default function ReservationsPage() {
     e.preventDefault()
     // Handle form submission (e.g., send data to server)
     console.log('Form submitted:', formData)
-    Toast({
+    toast({
       title: "Reservation submitted",
       description: "We'll confirm your reservation shortly.",
     })
