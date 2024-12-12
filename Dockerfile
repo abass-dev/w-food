@@ -19,8 +19,8 @@ COPY --chown=appuser:appgroup package*.json ./
 # Install dependencies as root
 RUN npm install --legacy-peer-deps
 
-# Create .cache directory with correct permissions
-RUN mkdir -p node_modules/.cache && chmod -R 777 node_modules/.cache
+# Create .next directory with correct permissions
+RUN mkdir -p .next && chown -R appuser:appgroup .next && chmod -R 755 .next
 
 # Copy the rest of the application code
 COPY --chown=appuser:appgroup . .
