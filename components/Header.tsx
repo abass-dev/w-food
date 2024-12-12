@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Menu, X } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
+import { Cart } from '@/components/Cart'
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -21,7 +22,7 @@ export default function Header() {
 
   const toggleMenu = () => setIsOpen(!isOpen)
 
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   return (
     <header className="bg-background shadow-md">
@@ -36,11 +37,14 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            {session ? (
+            {status === 'authenticated' && (
               <>
-                <span className="mr-2">Welcome, {session.user?.name || 'User'}</span>
-                <Button variant="outline" onClick={() => signOut()}>Logout</Button>
+                <span className="mr-4">Welcome, {session.user.name}</span>
+                <Cart />
               </>
+            )}
+            {status === 'authenticated' ? (
+              <Button variant="outline" onClick={() => signOut()}>Logout</Button>
             ) : (
               <Button variant="outline" asChild>
                 <Link href="/login">Login</Link>
@@ -79,7 +83,7 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
-              {session ? (
+              {status === 'authenticated' ? (
                 <>
                   <Button variant="outline" onClick={() => signOut()} className="w-full">Logout</Button>
                 </>

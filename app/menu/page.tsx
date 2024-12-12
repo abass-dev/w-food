@@ -4,22 +4,13 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Plus, Minus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useCart } from '@/contexts/CartContext'
-import { toast } from '@/components/ui/use-toast'
-
-interface MenuItem {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-  category: {
-    id: string
-    name: string
-  }
-}
+import { toast } from '@/hooks/use-toast'
+import { MenuItem } from '@/types/menu'
 
 interface Category {
   id: string
@@ -30,6 +21,7 @@ export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [filter, setFilter] = useState('all')
+  const [itemQuantities, setItemQuantities] = useState<{[key: string]: number}>({})
 
   const router = useRouter()
   const { data: session } = useSession()
@@ -54,21 +46,35 @@ export default function MenuPage() {
 
   const handleAddToCart = (item: MenuItem) => {
     if (!session) {
-      router.push('/login?redirect=/menu')
-      return
+      router.push('/login?redirect=/menu');
+      return;
     }
     
-    addToCart({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      quantity: 1
-    })
+    const quantity = itemQuantities[item.id] || 1;
+    addToCart({...item, quantity});
     
     toast({
       title: "Added to cart",
-      description: `${item.name} has been added to your cart.`,
-    })
+      description: `${quantity} ${quantity > 1 ? 'items' : 'item'} of ${item.name} ${quantity > 1 ? 'have' : 'has'} been added to your cart.`,
+    });
+
+    // Reset the quantity after adding to cart
+    setItemQuantities(prev => ({ ...prev, [item.id]: 1 }));
+  }
+
+  const incrementQuantity = (itemId: string) => {
+    setItemQuantities(prev => ({ ...prev, [itemId]: (prev[itemId] || 1) + 1 }))
+  }
+
+  const decrementQuantity = (itemId: string) => {
+    setItemQuantities(prev => ({ ...prev, [itemId]: Math.max((prev[itemId] || 1) - 1, 1) }))
+  }
+
+  const handleQuantityChange = (itemId: string, value: string) => {
+    const quantity = parseInt(value, 10)
+    if (!isNaN(quantity) && quantity > 0) {
+      setItemQuantities(prev => ({ ...prev, [itemId]: quantity }))
+    }
   }
 
   return (
@@ -106,7 +112,24 @@ export default function MenuPage() {
               <p className="text-lg font-bold">${item.price.toFixed(2)}</p>
             </div>
             <div className="p-4">
-              <Button onClick={() => handleAddToCart(item)} className="w-full">Add to Cart</Button>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <Button variant="outline" size="icon" onClick={() => decrementQuantity(item.id)}>
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={itemQuantities[item.id] || 1}
+                    onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                    className="w-16 mx-2 text-center"
+                  />
+                  <Button variant="outline" size="icon" onClick={() => incrementQuantity(item.id)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button onClick={() => handleAddToCart(item)}>Add to Cart</Button>
+              </div>
             </div>
           </motion.div>
         ))}

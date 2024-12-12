@@ -4,9 +4,12 @@ import { ThemeProvider } from '@/components/theme-provider'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AuthProvider from '@/components/AuthProvider'
-import { Providers } from '@/components/Providers'
-import { Toaster } from '@/components/ui/toaster'
 import { CartProvider } from '@/contexts/CartContext'
+import { Toaster } from '@/components/ui/toaster'
+import { Providers } from '@/components/Providers'
+import { store, persistor } from '@/lib/redux/store'
+import { Provider } from 'react-redux'
+import { PersistGate } from 'redux-persist/integration/react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -29,16 +32,22 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>
-          <CartProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <Header />
-              <main className="min-h-screen">{children}</main>
-              <Footer />
-              <Toaster />
-            </ThemeProvider>
-          </CartProvider>
-        </AuthProvider>
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistor}>
+            <Providers>
+              <AuthProvider>
+                <CartProvider>
+                  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                    <Header />
+                    <main className="min-h-screen">{children}</main>
+                    <Footer />
+                    <Toaster />
+                  </ThemeProvider>
+                </CartProvider>
+              </AuthProvider>
+            </Providers>
+          </PersistGate>
+        </Provider>
       </body>
     </html>
   )

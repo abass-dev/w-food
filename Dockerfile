@@ -4,9 +4,10 @@ FROM node:20-alpine
 # Set the working directory in the container
 WORKDIR /app
 
-# Install git and other necessary tools
-RUN apk add --no-cache git
+# Install git, OpenSSL, and other necessary tools
+RUN apk add --no-cache git openssl 
 
+RUN chmod -R 777 /app
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
@@ -25,11 +26,14 @@ RUN mkdir -p .next && chown -R appuser:appgroup .next && chmod -R 755 .next
 # Copy the rest of the application code
 COPY --chown=appuser:appgroup . .
 
+# Generate Prisma client
+RUN npx prisma generate
+
 # Build the Next.js application as root
 # RUN npm run build
 
 # Change ownership of all files to the non-root user
-RUN chown -R appuser:appgroup /app
+# RUN chown -R appuser:appgroup /app
 
 # Switch to non-root user
 USER appuser

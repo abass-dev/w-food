@@ -1,85 +1,82 @@
-"use client"
+'use client'
 
-import { useSelector, useDispatch } from 'react-redux'
-import { RootState } from '@/lib/redux/store'
-import { removeFromCart, updateQuantity, clearCart } from '@/lib/redux/cartSlice'
+import { useCart } from '@/contexts/CartContext'
 import { Button } from '@/components/ui/button'
-import Image from 'next/image'
+import { Input } from '@/components/ui/input'
+import { ShoppingCart, Plus, Minus, X } from 'lucide-react'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 export function Cart() {
-  const cartItems = useSelector((state: RootState) => state.cart.items)
-  const dispatch = useDispatch()
+  const { cart, removeFromCart, updateQuantity, getCartTotal } = useCart();
 
-  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+  const totalPrice = getCartTotal();
 
-  const handleRemoveItem = (id: string) => {
-    dispatch(removeFromCart(id))
-  }
-
-  const handleUpdateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity > 0) {
-      dispatch(updateQuantity({ id, quantity: newQuantity }))
-    } else {
-      dispatch(removeFromCart(id))
+  const handleQuantityChange = (id: string, value: string) => {
+    const quantity = parseInt(value, 10)
+    if (!isNaN(quantity) && quantity >= 0) {
+      updateQuantity(id, quantity)
     }
   }
 
-  const handleClearCart = () => {
-    dispatch(clearCart())
-  }
-
-  if (cartItems.length === 0) {
-    return <div className="text-center py-4">Your cart is empty</div>
-  }
-
   return (
-    <div className="p-4">
-      {cartItems.map((item) => (
-        <div key={item.id} className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <Image src={item.image} alt={item.name} width={50} height={50} className="rounded-md mr-4" />
-            <div>
-              <h3 className="font-semibold">{item.name}</h3>
-              <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline" className="flex items-center">
+          <ShoppingCart className="mr-2 h-4 w-4" />
+          <span>{totalItems} items</span>
+          <span className="ml-2">${totalPrice.toFixed(2)}</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Your Cart</SheetTitle>
+          <SheetDescription>
+            You have {totalItems} item{totalItems !== 1 ? 's' : ''} in your cart.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-8 space-y-4">
+          {cart.map((item) => (
+            <div key={item.id} className="flex items-center justify-between py-4">
+              <div>
+                <h3 className="font-semibold">{item.name}</h3>
+                <p className="text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="icon" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  min="0"
+                  value={item.quantity}
+                  onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                  className="w-16 text-center"
+                />
+                <Button variant="outline" size="icon" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-            >
-              -
-            </Button>
-            <span className="mx-2">{item.quantity}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-            >
-              +
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleRemoveItem(item.id)}
-              className="ml-2"
-            >
-              Remove
-            </Button>
-          </div>
+          ))}
         </div>
-      ))}
-      <div className="mt-4 flex justify-between items-center">
-        <p className="font-semibold">Total: ${totalPrice.toFixed(2)}</p>
-        <div>
-          <Button variant="outline" onClick={handleClearCart} className="mr-2">
-            Clear Cart
-          </Button>
-          <Button>Checkout</Button>
+        <div className="mt-4 flex justify-between items-center">
+          <span className="font-semibold">Total:</span>
+          <span className="font-semibold">${totalPrice.toFixed(2)}</span>
         </div>
-      </div>
-    </div>
+        <Button className="w-full mt-8">Proceed to Checkout</Button>
+      </SheetContent>
+    </Sheet>
   )
 }
 

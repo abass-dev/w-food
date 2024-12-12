@@ -1,20 +1,22 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-
-interface CartItem {
-  id: string
-  name: string
-  price: number
-  quantity: number
-}
+import React, { createContext, useContext } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { RootState, AppDispatch } from '@/lib/redux/store'
+import { addToCart, removeFromCart, updateQuantity, clearCart } from '@/lib/redux/cartSlice'
+import { MenuItem } from '@/types/menu'
 
 interface CartContextType {
   cart: CartItem[]
-  addToCart: (item: CartItem) => void
+  addToCart: (item: MenuItem) => void
   removeFromCart: (id: string) => void
+  updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
+  getCartTotal: () => number
+}
+
+interface CartItem extends MenuItem {
+  quantity: number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -28,46 +30,40 @@ export const useCart = () => {
 }
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>([])
-  const { data: session } = useSession()
+  const dispatch = useDispatch<AppDispatch>()
+  const cart = useSelector((state: RootState) => state.cart.items)
 
-  useEffect(() => {
-    // Load cart from local storage when the component mounts
-    const savedCart = localStorage.getItem('cart')
-    if (savedCart) {
-      setCart(JSON.parse(savedCart))
-    }
-  }, [])
-
-  useEffect(() => {
-    // Save cart to local storage whenever it changes
-    localStorage.setItem('cart', JSON.stringify(cart))
-  }, [cart])
-
-  const addToCart = (item: CartItem) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === item.id)
-      if (existingItem) {
-        return prevCart.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        )
-      }
-      return [...prevCart, { ...item, quantity: 1 }]
-    })
+  const addToCartHandler = (item: MenuItem) => {
+    dispatch(addToCart(item))
   }
 
-  const removeFromCart = (id: string) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== id))
+  const removeFromCartHandler = (id: string) => {
+    dispatch(removeFromCart(id))
   }
 
-  const clearCart = () => {
-    setCart([])
+  const updateQuantityHandler = (id: string, quantity: number) => {
+    dispatch(updateQuantity({ id, quantity }))
+  }
+
+  const clearCartHandler = () => {
+    dispatch(clearCart())
+  }
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart: addToCartHandler,
+        removeFromCart: removeFromCartHandler,
+        updateQuantity: updateQuantityHandler,
+        clearCart: clearCartHandler,
+        getCartTotal,
+      }}
+    >
       {children}
     </CartContext.Provider>
   )
