@@ -17,6 +17,6 @@
     "forwardPorts": [
         3000
     ],
-    "postCreateCommand": "npm install",
+    "postCreateCommand": "npm install --legacy-peer-deps",
     "remoteUser": "node"
 }

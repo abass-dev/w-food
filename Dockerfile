@@ -9,19 +9,30 @@ RUN apk add --no-cache git
 
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
+
+# Set ownership and permissions
+RUN chown -R appuser:appgroup /app
 
 # Copy package.json and package-lock.json (if available)
 COPY --chown=appuser:appgroup package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies as root
+RUN npm install --legacy-peer-deps
+
+# Create .cache directory with correct permissions
+RUN mkdir -p node_modules/.cache && chmod -R 777 node_modules/.cache
 
 # Copy the rest of the application code
 COPY --chown=appuser:appgroup . .
 
-# Build the Next.js application
-RUN npm run build
+# Build the Next.js application as root
+# RUN npm run build
+
+# Change ownership of all files to the non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
 
 # Expose the port the app runs on
 EXPOSE 3000
