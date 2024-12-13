@@ -8,8 +8,8 @@ RUN apk update && apk upgrade && \
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json ./
+RUN npm install --legacy-peer-deps
 
 FROM base AS dev
 
