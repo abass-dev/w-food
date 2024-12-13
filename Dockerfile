@@ -1,46 +1,75 @@
-# Use Node 20 Alpine as the base image
-FROM node:20-alpine
 
-# Set the working directory in the container
+FROM node:20-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache git libc6-compat
 WORKDIR /app
 
-# Install git, OpenSSL, and other necessary tools
-RUN apk add --no-cache git openssl 
-
-RUN chmod -R 777 /app
-# Create a non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-# Set ownership and permissions
-RUN chown -R appuser:appgroup /app
-
-# Copy package.json and package-lock.json (if available)
-COPY --chown=appuser:appgroup package*.json ./
-
-# Install dependencies as root
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
 
-# Create .next directory with correct permissions
-RUN mkdir -p .next && chown -R appuser:appgroup .next && chmod -R 755 .next
+FROM base AS dev
 
-# Copy the rest of the application code
-COPY --chown=appuser:appgroup . .
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# Generate Prisma client
+# Uncomment this if you're using prisma, generates prisma files for linting
+# RUN npx prisma generate
+
+#Enables Hot Reloading Check https://github.com/vercel/next.js/issues/36774 for more information
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /root/.npm /root/.npm
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Uncomment this if you're using prisma, generates prisma files for linting
 RUN npx prisma generate
 
-# Build the Next.js application as root
 # RUN npm run build
 
-# Change ownership of all files to the non-root user
-# RUN chown -R appuser:appgroup /app
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
 
-# Switch to non-root user
-USER appuser
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# Expose the port the app runs on
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Uncomment this if you're using prisma, copies prisma files for linting
+# COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
+USER nextjs
+
 EXPOSE 3000
 
-# Start the application
+# ENV PORT 3000
+# set hostname to localhost
+# ENV HOSTNAME "0.0.0.0"
+
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/next-config-js/output
 CMD ["npm", "run", "dev"]
 
