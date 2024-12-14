@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 export default function ReservationsPage() {
   const [formData, setFormData] = useState({
@@ -46,7 +46,7 @@ export default function ReservationsPage() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="container mx-auto px-6 py-12"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}

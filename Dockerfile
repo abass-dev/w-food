@@ -1,30 +1,42 @@
-FROM node:20-alpine AS base
+# Use Node 20 Alpine as the base image
+FROM node:20-alpine
 
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk update && apk upgrade && \
-    apk add --no-cache bash git openssh libc6-compat
+# Set the working directory in the container
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json ./
+# Install git and other necessary tools
+RUN apk add --no-cache openssh
+
+RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Set ownership and permissions
+RUN chown -R appuser:appgroup /app
+
+# Copy package.json and package-lock.json (if available)
+COPY --chown=appuser:appgroup package*.json ./
+
+# Install dependencies as root
 RUN npm install --legacy-peer-deps
 
-FROM base AS dev
+# Create .next directory with correct permissions
+RUN mkdir -p .next && chown -R appuser:appgroup .next && chmod -R 755 .next
 
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# Copy the rest of the application code
+COPY --chown=appuser:appgroup . .
 
-# Uncomment this if you're using prisma, generates prisma files for linting
-RUN npx prisma generate
+# Build the Next.js application as root
+# RUN npm run build
 
-# Enables Hot Reloading
-ENV CHOKIDAR_USEPOLLING=true
-ENV WATCHPACK_POLLING=true
+# Change ownership of all files to the non-root user
+RUN chown -R appuser:appgroup /app
 
+# Switch to non-root user
+USER appuser
+
+# Expose the port the app runs on
 EXPOSE 3000
 
+# Start the application
 CMD ["npm", "run", "dev"]
-

@@ -32,22 +32,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
-            <Providers>
-              <AuthProvider>
-                <CartProvider>
-                  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                    <Header />
-                    <main className="min-h-screen">{children}</main>
-                    <Footer />
-                    <Toaster />
-                  </ThemeProvider>
-                </CartProvider>
-              </AuthProvider>
-            </Providers>
-          </PersistGate>
-        </Provider>
+        <Providers>
+          <AuthProvider>
+            <CartProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <Header />
+                <main className="min-h-screen">{children}</main>
+                <Footer />
+                <Toaster />
+              </ThemeProvider>
+            </CartProvider>
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   )
