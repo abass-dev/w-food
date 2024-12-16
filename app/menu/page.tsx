@@ -4,76 +4,97 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Plus, Minus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { useCart } from '@/contexts/CartContext'
 import { toast } from '@/hooks/use-toast'
-import { MenuItem } from '@/types/menu'
-
-interface Category {
-  id: string
-  name: string
-}
+import { MenuItem, Category } from '@/types/menu'
+import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import LoginForm from '@/components/LoginForm'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [filter, setFilter] = useState('all')
-  const [itemQuantities, setItemQuantities] = useState<{[key: string]: number}>({})
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
 
   const router = useRouter()
-  const { data: session } = useSession()
   const { addToCart } = useCart()
+  const { data: session } = useSession()
 
   useEffect(() => {
     async function fetchData() {
-      const menuResponse = await fetch('/api/menu')
-      const menuData = await menuResponse.json()
-      setMenuItems(menuData)
+      try {
+        const [menuResponse, categoriesResponse] = await Promise.all([
+          fetch('/api/menu'),
+          fetch('/api/categories')
+        ])
 
-      const categoriesResponse = await fetch('/api/categories')
-      const categoriesData = await categoriesResponse.json()
-      setCategories([{ id: 'all', name: 'All' }, ...categoriesData])
+        if (!menuResponse.ok || !categoriesResponse.ok) {
+          throw new Error('Failed to fetch data')
+        }
+
+        const menuData = await menuResponse.json()
+        const categoriesData = await categoriesResponse.json()
+
+        setMenuItems(menuData)
+        setCategories([{ id: 'all', name: 'All' }, ...categoriesData])
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load menu data. Please try again later.",
+          variant: "destructive",
+        })
+      }
     }
     fetchData()
   }, [])
 
-  const filteredItems = filter === 'all' 
-    ? menuItems 
+  const filteredItems = filter === 'all'
+    ? menuItems
     : menuItems.filter(item => item.category.id === filter)
 
   const handleAddToCart = (item: MenuItem) => {
-    if (!session) {
-      router.push('/login?redirect=/menu');
-      return;
-    }
-    
-    const quantity = itemQuantities[item.id] || 1;
-    addToCart({...item, quantity});
-    
+    addToCart(item)
+
     toast({
       title: "Added to cart",
-      description: `${quantity} ${quantity > 1 ? 'items' : 'item'} of ${item.name} ${quantity > 1 ? 'have' : 'has'} been added to your cart.`,
-    });
-
-    // Reset the quantity after adding to cart
-    setItemQuantities(prev => ({ ...prev, [item.id]: 1 }));
+      description: `${item.name} has been added to your cart.`,
+    })
   }
 
-  const incrementQuantity = (itemId: string) => {
-    setItemQuantities(prev => ({ ...prev, [itemId]: (prev[itemId] || 1) + 1 }))
+  const handleWhatsAppOrder = (item: MenuItem) => {
+    if (session) {
+      const message = encodeURIComponent(
+        `Hello, I'd like to order:\n\n` +
+        `Item: ${item.name}\n` +
+        `Price: $${item.price.toFixed(2)}\n` +
+        `Category: ${item.category.name}\n` +
+        `Image: ${window.location.origin}${item.image}\n` +
+        `Full URL: ${window.location.origin}/menu/${item.id}\n\n` +
+        `Total: $${item.price.toFixed(2)}`
+      )
+      const whatsappUrl = `https://wa.me/22798241163?text=${message}`
+      window.open(whatsappUrl, '_blank')
+    } else {
+      setSelectedItem(item)
+      setIsLoginDialogOpen(true)
+    }
   }
 
-  const decrementQuantity = (itemId: string) => {
-    setItemQuantities(prev => ({ ...prev, [itemId]: Math.max((prev[itemId] || 1) - 1, 1) }))
-  }
-
-  const handleQuantityChange = (itemId: string, value: string) => {
-    const quantity = parseInt(value, 10)
-    if (!isNaN(quantity) && quantity > 0) {
-      setItemQuantities(prev => ({ ...prev, [itemId]: quantity }))
+  const handleLoginSuccess = () => {
+    setIsLoginDialogOpen(false)
+    if (selectedItem) {
+      handleWhatsAppOrder(selectedItem)
     }
   }
 
@@ -82,58 +103,58 @@ export default function MenuPage() {
       <h1 className="text-4xl font-bold mb-8 text-center">Our Menu</h1>
       <div className="flex justify-center space-x-4 mb-8">
         {categories.map((category) => (
-          <Button 
-            key={category.id} 
-            onClick={() => setFilter(category.id)} 
+          <Button
+            key={category.id}
+            onClick={() => setFilter(category.id)}
             variant={filter === category.id ? 'default' : 'outline'}
           >
             {category.name}
           </Button>
         ))}
       </div>
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-2 gap-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
         {filteredItems.map((item) => (
-          <motion.div 
-            key={item.id} 
+          <motion.div
+            key={item.id}
             className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden flex flex-col"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Image src={item.image} alt={item.name} width={300} height={200} className="w-full object-cover h-48" />
-            <div className="p-4 flex-grow">
-              <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
-              <p className="text-muted-foreground mb-2">{item.description}</p>
-              <p className="text-lg font-bold">${item.price.toFixed(2)}</p>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Button variant="outline" size="icon" onClick={() => decrementQuantity(item.id)}>
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={itemQuantities[item.id] || 1}
-                    onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                    className="w-16 mx-2 text-center"
-                  />
-                  <Button variant="outline" size="icon" onClick={() => incrementQuantity(item.id)}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button onClick={() => handleAddToCart(item)}>Add to Cart</Button>
+            <Link href={`/menu/${item.id}`} className="flex flex-col h-full">
+              <Image src={item.image} alt={item.name} width={300} height={200} className="w-full object-cover h-48" />
+              <div className="p-4 flex-grow">
+                <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+                <p className="text-muted-foreground mb-2">{item.description}</p>
+                <p className="text-lg font-bold">${item.price.toFixed(2)}</p>
               </div>
+            </Link>
+            <div className="p-4 space-y-2">
+              <Button onClick={() => handleAddToCart(item)} className="w-full">Add to Cart</Button>
+              <Button onClick={() => handleWhatsAppOrder(item)} className="w-full" variant="secondary">
+                Order on WhatsApp
+              </Button>
             </div>
           </motion.div>
         ))}
       </motion.div>
+
+      <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Login Required</DialogTitle>
+            <DialogDescription>
+              Please log in or create an account to order via WhatsApp.
+            </DialogDescription>
+          </DialogHeader>
+          <LoginForm onSuccess={handleLoginSuccess} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

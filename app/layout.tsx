@@ -7,9 +7,6 @@ import AuthProvider from '@/components/AuthProvider'
 import { CartProvider } from '@/contexts/CartContext'
 import { Toaster } from '@/components/ui/toaster'
 import { Providers } from '@/components/Providers'
-import { store, persistor } from '@/lib/redux/store'
-import { Provider } from 'react-redux'
-import { PersistGate } from 'redux-persist/integration/react'
 
 const inter = Inter({ subsets: ['latin'] })
 

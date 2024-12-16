@@ -5,15 +5,17 @@ import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { MenuItem } from '@/types/menu'
+import { MenuItem, CartItem } from '@/types/menu'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/lib/redux/cartSlice'
 import { AppDispatch } from '@/lib/redux/store'
 import { toast } from '@/hooks/use-toast'
+import { MenuItemSkeleton } from '@/components/MenuItemSkeleton'
 
 export default function MenuItemPage() {
   const [menuItem, setMenuItem] = useState<MenuItem | null>(null)
   const [quantity, setQuantity] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
   const params = useParams()
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
@@ -21,7 +23,8 @@ export default function MenuItemPage() {
   useEffect(() => {
     async function fetchMenuItem() {
       try {
-        const response = await fetch(`/api/menu/${params.id}`)
+        const id = params.id as string
+        const response = await fetch(`/api/menu/${id}`)
         if (!response.ok) {
           throw new Error('Failed to fetch menu item')
         }
@@ -30,6 +33,8 @@ export default function MenuItemPage() {
       } catch (error) {
         console.error('Error fetching menu item:', error)
         router.push('/menu')
+      } finally {
+        setIsLoading(false)
       }
     }
     fetchMenuItem()
@@ -37,7 +42,8 @@ export default function MenuItemPage() {
 
   const handleAddToCart = () => {
     if (menuItem) {
-      dispatch(addToCart({ ...menuItem, quantity }))
+      const cartItem: CartItem = { ...menuItem, quantity }
+      dispatch(addToCart(cartItem))
       toast({
         title: "Added to cart",
         description: `${quantity} ${menuItem.name} added to your cart.`,
@@ -45,8 +51,26 @@ export default function MenuItemPage() {
     }
   }
 
+  const handleWhatsAppOrder = () => {
+    if (menuItem) {
+      const message = encodeURIComponent(`Hello, I'd like to order ${quantity} ${menuItem.name}(s) for a total of $${(menuItem.price * quantity).toFixed(2)}.`)
+      const whatsappUrl = `https://wa.me/22798241136?text=${message}`
+      window.open(whatsappUrl, '_blank')
+    }
+  }
+
+  if (isLoading) {
+    return <MenuItemSkeleton />
+  }
+
   if (!menuItem) {
-    return <div>Loading...</div>
+    return (
+      <div className="container mx-auto px-6 py-12 text-center">
+        <h1 className="text-2xl font-bold mb-4">Menu Item Not Found</h1>
+        <p className="mb-4">Sorry, we couldn't find the menu item you're looking for.</p>
+        <Button onClick={() => router.push('/menu')}>Return to Menu</Button>
+      </div>
+    )
   }
 
   return (
@@ -74,6 +98,7 @@ export default function MenuItemPage() {
             <Button
               variant="outline"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              aria-label="Decrease quantity"
             >
               -
             </Button>
@@ -81,13 +106,19 @@ export default function MenuItemPage() {
             <Button
               variant="outline"
               onClick={() => setQuantity(quantity + 1)}
+              aria-label="Increase quantity"
             >
               +
             </Button>
           </div>
-          <Button onClick={handleAddToCart} className="w-full">
-            Add to Cart
-          </Button>
+          <div className="flex flex-col gap-4">
+            <Button onClick={handleAddToCart} className="w-full">
+              Add to Cart
+            </Button>
+            <Button onClick={handleWhatsAppOrder} className="w-full" variant="secondary">
+              Order on WhatsApp
+            </Button>
+          </div>
         </div>
       </motion.div>
     </div>

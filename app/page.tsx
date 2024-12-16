@@ -7,9 +7,11 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { MenuCarousel } from '@/components/MenuCarousel'
 import { MenuItem } from '@/types/menu'
+import { MenuItemSkeleton } from '@/components/MenuItemSkeleton'
 
 export default function Home() {
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function fetchFeaturedItems() {
@@ -17,16 +19,20 @@ export default function Home() {
         const response = await fetch('/api/featured-menu')
         const data = await response.json()
         setFeaturedItems(data)
+        setIsLoading(false)
       } catch (error) {
         console.error('Error fetching featured items:', error)
+        setIsLoading(false)
       }
     }
     fetchFeaturedItems()
   }, [])
 
+
+
   return (
     <div className="container mx-auto px-6 py-12">
-      <motion.section 
+      <motion.section
         className="text-center mb-12"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -44,17 +50,18 @@ export default function Home() {
         </div>
       </motion.section>
 
-      <motion.section 
+      <motion.section
         className="mb-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
         <h2 className="text-3xl font-bold mb-6 text-center">Our Specialties</h2>
+        {isLoading ? <MenuItemSkeleton /> : ''}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {featuredItems.map((item) => (
             <Link href={`/menu/${item.id}`} key={item.id}>
-              <motion.div 
+              <motion.div
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -79,10 +86,11 @@ export default function Home() {
         transition={{ delay: 0.4, duration: 0.5 }}
       >
         <h2 className="text-3xl font-bold mb-6 text-center">Featured Menu Items</h2>
+        {isLoading ? <MenuItemSkeleton /> : ''}
         <MenuCarousel items={featuredItems} />
       </motion.section>
 
-      <motion.section 
+      <motion.section
         className="text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -1,14 +1,27 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { convertPrismaItem } from '@/lib/utils'
+import { getFromCache, setCache } from '@/lib/cache'
 
 export async function GET(
-  request: Request,
-  context: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params
+  const { id } = await params
+
+  if (!id) {
+    return NextResponse.json({ error: 'Menu item ID is required' }, { status: 400 })
+  }
 
   try {
+    // Try to get menu item from cache
+    const cachedMenuItem = getFromCache<any>(`menuItem:${id}`)
+
+    if (cachedMenuItem) {
+      return NextResponse.json(cachedMenuItem)
+    }
+
+    // If not in cache, fetch from database
     const menuItem = await prisma.menuItem.findUnique({
       where: { id },
       include: { category: true },
@@ -19,6 +32,10 @@ export async function GET(
     }
 
     const formattedItem = convertPrismaItem(menuItem)
+
+    // Set the fetched item in cache
+    setCache(`menuItem:${id}`, formattedItem)
+
     return NextResponse.json(formattedItem)
   } catch (error) {
     console.error('Error fetching menu item:', error)

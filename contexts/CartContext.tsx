@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '@/lib/redux/store'
 import { addToCart, removeFromCart, updateQuantity, clearCart } from '@/lib/redux/cartSlice'
@@ -31,7 +31,12 @@ export const useCart = () => {
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>()
-  const cart = useSelector((state: RootState) => state.cart.items)
+  const cartItems = useSelector((state: RootState) => state.cart.items)
+  const [cart, setCart] = useState<CartItem[]>([])
+
+  useEffect(() => {
+    setCart(cartItems)
+  }, [cartItems])
 
   const addToCartHandler = (item: MenuItem) => {
     dispatch(addToCart(item))

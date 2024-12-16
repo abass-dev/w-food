@@ -28,6 +28,9 @@ export const authOptions: NextAuthOptions = {
         if (!user) {
           return null
         }
+        if (!user.isVerified) {
+          throw new Error('Please verify your email before logging in.')
+        }
         const isPasswordValid = await compare(credentials.password, user.password)
         if (!isPasswordValid) {
           return null
@@ -50,14 +53,12 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token.uid as string;
-        session.user.name = token.name as string;
       }
       return session;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.uid = user.id;
-        token.name = user.name;
       }
       return token;
     }

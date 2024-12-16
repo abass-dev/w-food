@@ -16,7 +16,7 @@ export default function ReservationsPage() {
     guests: '',
   })
 
-  const [availability, setAvailability] = useState(null)
+  const [availability, setAvailability] = useState(Boolean)
   const { toast } = useToast()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,6 +1,5 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -9,18 +8,18 @@ datasource db {
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -43,10 +42,11 @@ model User {
   image         String?
   password      String?
   phoneNumber   String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model VerificationToken {
@@ -58,27 +58,27 @@ model VerificationToken {
 }
 
 model Restaurant {
-  id             String         @id @default(cuid())
-  name           String
-  description    String
-  address        String
-  phone          String
-  email          String
-  openingHours   Json
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  address     String
+  phone       String
+  email       String
+  openingHours Json
   menuCategories MenuCategory[]
-  orders         Order[]
+  orders      Order[]
 }
 
 model MenuCategory {
-  id           String     @id @default(cuid())
-  name         String
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  id          String   @id @default(cuid())
+  name        String
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
   restaurantId String
-  menuItems    MenuItem[]
+  menuItems   MenuItem[]
 }
 
 model MenuItem {
-  id          String       @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String
   price       Decimal
@@ -90,51 +90,51 @@ model MenuItem {
 }
 
 model Order {
-  id           String      @id @default(cuid())
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  status       OrderStatus
-  total        Decimal
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      OrderStatus
+  total       Decimal
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
   restaurantId String
-  customer     Customer    @relation(fields: [customerId], references: [id])
-  customerId   String
-  orderItems   OrderItem[]
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  String
+  orderItems  OrderItem[]
 }
 
 model OrderItem {
-  id         String   @id @default(cuid())
-  quantity   Int
-  price      Decimal
-  order      Order    @relation(fields: [orderId], references: [id])
-  orderId    String
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
-  menuItemId String
+  id          String   @id @default(cuid())
+  quantity    Int
+  price       Decimal
+  order       Order    @relation(fields: [orderId], references: [id])
+  orderId     String
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId  String
 }
 
 model Customer {
-  id     String  @id @default(cuid())
-  name   String
-  email  String  @unique
-  phone  String?
-  orders Order[]
-  cart   Cart?
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  orders      Order[]
+  cart        Cart?
 }
 
 model Cart {
-  id         String     @id @default(cuid())
-  customer   Customer   @relation(fields: [customerId], references: [id])
-  customerId String     @unique
-  cartItems  CartItem[]
+  id          String   @id @default(cuid())
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  String   @unique
+  cartItems   CartItem[]
 }
 
 model CartItem {
-  id         String   @id @default(cuid())
-  quantity   Int
-  cart       Cart     @relation(fields: [cartId], references: [id])
-  cartId     String
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
-  menuItemId String
+  id          String   @id @default(cuid())
+  quantity    Int
+  cart        Cart     @relation(fields: [cartId], references: [id])
+  cartId      String
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId  String
 }
 
 enum OrderStatus {
@@ -144,3 +144,4 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
 }
+
