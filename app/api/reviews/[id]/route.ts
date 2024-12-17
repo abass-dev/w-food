@@ -14,7 +14,7 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { id: menuItemId } = params
+        const { id: menuItemId } = await params
         const { rating, comment } = await req.json()
 
         if (!rating || !comment) {

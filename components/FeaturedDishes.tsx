@@ -2,7 +2,39 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { getFeaturedDishes } from '@/lib/api'
+import prisma from '@/lib/prisma'
+import { convertPrismaItem } from '@/lib/utils'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+
+async function getFeaturedDishes() {
+    const session = await getServerSession(authOptions)
+    const userId = session?.user?.id
+
+    const featuredItems = await prisma.menuItem.findMany({
+        take: 3,
+        orderBy: {
+            id: 'asc',
+        },
+        include: {
+            category: true,
+            favoriteDishes: userId ? {
+                where: {
+                    userId: userId
+                }
+            } : false
+        },
+    })
+
+    return featuredItems.map(item => ({
+        ...convertPrismaItem(item),
+        isFavorite: userId ? item.favoriteDishes && item.favoriteDishes.length > 0 : false,
+        category: {
+            id: item.category.id,
+            name: item.category.name,
+        }
+    }))
+}
 
 export default async function FeaturedDishes() {
     const featuredDishes = await getFeaturedDishes()

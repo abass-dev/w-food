@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient()
 
@@ -21,6 +22,20 @@ async function main() {
       },
     },
   })
+
+  const adminUser = await prisma.user.create({
+    data: {
+      name: 'Admin User',
+      email: 'abassdev227@gmail.com',
+      password: await bcrypt.hash('admin', 10),
+      role: 'ADMIN',
+      phoneNumber: "22798241163",
+      isVerified: true,
+      emailVerified: "2024-12-17T07:51:10.163Z",
+    },
+  })
+
+  console.log({ adminUser })
 
   const categories = await Promise.all([
     prisma.menuCategory.create({

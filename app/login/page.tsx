@@ -1,23 +1,30 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useToast } from "@/hooks/use-toast"
+import { useEffect, useState } from 'react'
+import { useSession, signIn } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import LoginForm from '@/components/LoginForm'
+import { toast } from '@/hooks/use-toast'
+import { Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const { data: session, status } = useSession()
   const router = useRouter()
-  const { toast } = useToast()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    if (status === 'authenticated') {
+      if (session?.user?.role === 'ADMIN' && callbackUrl?.startsWith('/admin')) {
+        router.push(callbackUrl)
+      } else {
+        router.push('/')
+      }
+    }
+  }, [status, router, callbackUrl, session])
+
+  const handleSubmit = async (email: string, password: string) => {
     setIsLoading(true)
 
     try {
@@ -28,19 +35,28 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password. Please try again.",
-          variant: "destructive",
-        })
+        if (result.error === 'Please verify your email before logging in.') {
+          toast({
+            title: "Email Verification Required",
+            description: "Please check your email and verify your account before logging in.",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Login Failed",
+            description: "Invalid email or password. Please try again.",
+            variant: "destructive",
+          })
+        }
       } else {
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         })
-        router.push('/')
+        // The router.push is handled in the useEffect hook
       }
     } catch (error) {
+      console.error('Login error:', error)
       toast({
         title: "Login Error",
         description: "An unexpected error occurred. Please try again.",
@@ -51,42 +67,22 @@ export default function LoginPage() {
     }
   }
 
+  if (status === 'loading') {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (status === 'authenticated') {
+    return null
+  }
+
   return (
     <div className="container mx-auto px-6 py-12 max-w-md">
       <h1 className="text-3xl font-bold mb-6 text-center">Login</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Logging in...' : 'Login'}
-        </Button>
-      </form>
-      <div className="mt-4 text-center">
-        <Button variant="outline" onClick={() => signIn('google')} className="w-full">
-          Login with Google
-        </Button>
-      </div>
-      <p className="mt-4 text-center">
-        Don't have an account? <Link href="/signup" className="text-primary hover:underline">Sign up</Link>
-      </p>
+      <LoginForm onSubmit={handleSubmit} isLoading={isLoading} />
     </div>
   )
 }

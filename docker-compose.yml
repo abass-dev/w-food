@@ -18,9 +18,9 @@ services:
   db:
     image: postgres:13-alpine
     environment:
-      - POSTGRES_USER=w_food_db_owner
-      - POSTGRES_PASSWORD=D0tfV8xoyeAj
-      - POSTGRES_DB=w_food_db
+      - POSTGRES_USER=food_owner
+      - POSTGRES_PASSWORD=CBn6zuJsV1Hq
+      - POSTGRES_DB=food
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

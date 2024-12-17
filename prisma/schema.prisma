@@ -8,20 +8,19 @@ datasource db {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -35,22 +34,23 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  phoneNumber   String?
-  accounts      Account[]
-  sessions      Session[]
-  isVerified    Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  preferences   UserPreference?
+  id             String          @id @default(cuid())
+  name           String?
+  email          String?         @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String?
+  phoneNumber    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  isVerified     Boolean         @default(false)
+  role           Role            @default(USER)
+  accounts       Account[]
   favoriteDishes FavoriteDish[]
-  orders        Order[]
-  reviews     Review[]
+  orders         Order[]
+  reviews        Review[]
+  sessions       Session[]
+  preferences    UserPreference?
 }
 
 model VerificationToken {
@@ -62,87 +62,127 @@ model VerificationToken {
 }
 
 model Restaurant {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  address     String
-  phone       String
-  email       String
-  openingHours Json
+  id             String         @id @default(cuid())
+  name           String
+  description    String
+  address        String
+  phone          String
+  email          String
+  openingHours   Json
   menuCategories MenuCategory[]
-  orders      Order[]
+  orders         Order[]
 }
 
 model MenuCategory {
-  id          String   @id @default(cuid())
-  name        String
-  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
+  id           String     @id @default(cuid())
+  name         String
   restaurantId String
-  menuItems   MenuItem[]
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  menuItems    MenuItem[]
 }
 
 model MenuItem {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  price       Decimal
-  image       String
-  category    MenuCategory @relation(fields: [categoryId], references: [id])
-  categoryId  String
-  orderItems  OrderItem[]
-  cartItems   CartItem[]
+  id             String         @id @default(cuid())
+  name           String
+  description    String
+  price          Decimal
+  image          String
+  categoryId     String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @default(now()) @updatedAt
+  cartItems      CartItem[]
   favoriteDishes FavoriteDish[]
-  reviews     Review[]
+  category       MenuCategory   @relation(fields: [categoryId], references: [id])
+  orderItems     OrderItem[]
+  reviews        Review[]
 }
 
 model Order {
-  id            String   @id @default(cuid())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  status        OrderStatus
-  total         Decimal
-  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
+  id           String      @id @default(cuid())
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  status       OrderStatus
+  total        Decimal
   restaurantId String
-  customer    Customer @relation(fields: [customerId], references: [id])
-  customerId  String
-  orderItems  OrderItem[]
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  customerId   String
+  userId       String
+  customer     Customer    @relation(fields: [customerId], references: [id])
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
+  orderItems   OrderItem[]
 }
 
 model OrderItem {
-  id          String   @id @default(cuid())
-  quantity    Int
-  price       Decimal
-  order       Order    @relation(fields: [orderId], references: [id])
-  orderId     String
-  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
-  menuItemId  String
+  id         String   @id @default(cuid())
+  quantity   Int
+  price      Decimal
+  orderId    String
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
 }
 
 model Customer {
-  id          String   @id @default(cuid())
-  name        String
-  email       String   @unique
-  phone       String?
-  orders      Order[]
-  cart        Cart?
+  id     String  @id @default(cuid())
+  name   String
+  email  String  @unique
+  phone  String?
+  cart   Cart?
+  orders Order[]
 }
 
 model Cart {
-  id          String   @id @default(cuid())
-  customer    Customer @relation(fields: [customerId], references: [id])
-  customerId  String   @unique
-  cartItems   CartItem[]
+  id         String     @id @default(cuid())
+  customerId String     @unique
+  customer   Customer   @relation(fields: [customerId], references: [id])
+  cartItems  CartItem[]
 }
 
 model CartItem {
-  id          String   @id @default(cuid())
-  quantity    Int
-  cart        Cart     @relation(fields: [cartId], references: [id])
-  cartId      String
-  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
-  menuItemId  String
+  id         String   @id @default(cuid())
+  quantity   Int
+  cartId     String
+  menuItemId String
+  cart       Cart     @relation(fields: [cartId], references: [id])
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model UserPreference {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  dietaryRestrictions String[]
+  allergies           String[]
+  spicePreference     String?
+  user                User     @relation(fields: [userId], references: [id])
+}
+
+model FavoriteDish {
+  id         String   @id @default(cuid())
+  userId     String
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, menuItemId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  menuItemId String
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum OrderStatus {
@@ -153,41 +193,7 @@ enum OrderStatus {
   CANCELLED
 }
 
-model UserPreference {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id])
-  dietaryRestrictions String[]
-  allergies     String[]
-  spicePreference String?
+enum Role {
+  USER
+  ADMIN
 }
-
-model FavoriteDish {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
-  menuItemId    String
-  menuItem      MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, menuItemId])
-}
-
-model Review {
-  id          String   @id @default(cuid())
-  userId      String
-  menuItemId  String
-  rating      Int
-  comment     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id])
-  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
-}
-
-model NewsletterSubscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-

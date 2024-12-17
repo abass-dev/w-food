@@ -1,73 +1,31 @@
-"use client"
-
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
-import { DialogTitle } from "@/components/ui/dialog"
-import { VisuallyHidden } from "@/components/ui/visually-hidden"
-import { Chrome } from 'lucide-react'
+import { Loader2, Chrome } from 'lucide-react'
 
 interface LoginFormProps {
-    onSuccess: () => void
+    onSubmit: (email: string, password: string) => Promise<void>
+    isLoading: boolean
 }
 
-export default function LoginForm({ onSuccess }: LoginFormProps) {
+export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [error, setError] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        setIsLoading(true)
-        try {
-            const result = await signIn('credentials', {
-                redirect: false,
-                email,
-                password,
-            })
-            if (result?.error) {
-                if (result.error === 'Please verify your email before logging in.') {
-                    setError('Please check your email and verify your account before logging in.')
-                } else {
-                    setError('Invalid email or password')
-                }
-            } else {
-                onSuccess()
-            }
-        } catch (error) {
-            console.error('Login error:', error)
-            setError('An unexpected error occurred. Please try again.')
-        } finally {
-            setIsLoading(false)
-        }
+        onSubmit(email, password)
     }
 
-    const handleGoogleSignIn = async () => {
-        setIsLoading(true)
-        try {
-            const result = await signIn('google', { callbackUrl: '/' })
-            if (result?.error) {
-                setError('Failed to sign in with Google. Please try again.')
-            } else {
-                onSuccess()
-            }
-        } catch (error) {
-            console.error('Google sign-in error:', error)
-            setError('An unexpected error occurred. Please try again.')
-        } finally {
-            setIsLoading(false)
-        }
+    const handleGoogleSignIn = () => {
+        signIn('google', { callbackUrl: '/' })
     }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <DialogTitle asChild>
-                <VisuallyHidden>Login to your account</VisuallyHidden>
-            </DialogTitle>
             <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -90,8 +48,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                     disabled={isLoading}
                 />
             </div>
-            {error && <p className="text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isLoading ? 'Logging in...' : 'Login'}
             </Button>
             <div className="relative">
