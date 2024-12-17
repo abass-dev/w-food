@@ -11,6 +11,15 @@ import { addToCart } from '@/lib/redux/cartSlice'
 import { AppDispatch } from '@/lib/redux/store'
 import { toast } from '@/hooks/use-toast'
 import { MenuItemSkeleton } from '@/components/MenuItemSkeleton'
+import { useSession } from 'next-auth/react'
+import LoginForm from '@/components/LoginForm'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function MenuItemPage() {
   const [menuItem, setMenuItem] = useState<MenuItem | null>(null)
@@ -19,6 +28,8 @@ export default function MenuItemPage() {
   const params = useParams()
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
+  const { data: session } = useSession()
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false)
 
   useEffect(() => {
     async function fetchMenuItem() {
@@ -52,6 +63,19 @@ export default function MenuItemPage() {
   }
 
   const handleWhatsAppOrder = () => {
+    if (session) {
+      if (menuItem) {
+        const message = encodeURIComponent(`Hello, I'd like to order ${quantity} ${menuItem.name}(s) for a total of $${(menuItem.price * quantity).toFixed(2)}.`)
+        const whatsappUrl = `https://wa.me/22798241136?text=${message}`
+        window.open(whatsappUrl, '_blank')
+      }
+    } else {
+      setIsLoginDialogOpen(true)
+    }
+  }
+
+  const handleLoginSuccess = () => {
+    setIsLoginDialogOpen(false)
     if (menuItem) {
       const message = encodeURIComponent(`Hello, I'd like to order ${quantity} ${menuItem.name}(s) for a total of $${(menuItem.price * quantity).toFixed(2)}.`)
       const whatsappUrl = `https://wa.me/22798241136?text=${message}`
@@ -121,6 +145,17 @@ export default function MenuItemPage() {
           </div>
         </div>
       </motion.div>
+      <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Login Required</DialogTitle>
+            <DialogDescription>
+              Please log in or create an account to order via WhatsApp.
+            </DialogDescription>
+          </DialogHeader>
+          <LoginForm onSuccess={handleLoginSuccess} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

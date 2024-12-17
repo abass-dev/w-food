@@ -19,6 +19,7 @@ import {
   SheetContent,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet"
 import { VisuallyHidden } from './ui/visually-hidden'
 
@@ -39,6 +40,10 @@ export default function Header() {
     setIsOpen(false)
   }, [pathname])
 
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/' })
+  }
+
   return (
     <header className="bg-background shadow-md sticky top-0 z-50">
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,14 +60,15 @@ export default function Header() {
                 href={item.href}
                 className={`text-foreground hover:text-foreground/80 px-3 py-2 rounded-md text-sm font-medium ${pathname === item.href ? 'bg-primary/10' : ''
                   }`}
+                aria-current={pathname === item.href ? 'page' : undefined}
               >
                 {item.label}
               </Link>
             ))}
           </div>
           <div className="hidden lg:flex items-center space-x-4">
-            <Cart />
-            <ModeToggle />
+            <Cart aria-label="Shopping cart" />
+            <ModeToggle aria-label="Toggle color theme" />
             {status === 'authenticated' ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -71,7 +77,7 @@ export default function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => signOut()}>
+                  <DropdownMenuItem onClick={handleSignOut}>
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -85,50 +91,58 @@ export default function Header() {
             <Button>Reserve</Button>
           </div>
           <div className="flex lg:hidden items-center space-x-2">
-            <Cart />
-            <ModeToggle />
+            <Cart aria-label="Shopping cart" />
+            <ModeToggle aria-label="Toggle color theme" />
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="Open main menu">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetTitle className="sr-only">Main Menu</SheetTitle>
                 <nav className="flex flex-col space-y-4 mt-8">
                   {navItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`text-foreground hover:text-foreground/80 px-3 py-2 rounded-md text-sm font-medium ${pathname === item.href ? 'bg-primary/10' : ''
-                        }`}
-                    >
-                      {item.label}
-                    </Link>
+                    <SheetClose asChild key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={`text-foreground hover:text-foreground/80 px-3 py-2 rounded-md text-sm font-medium ${pathname === item.href ? 'bg-primary/10' : ''
+                          }`}
+                        aria-current={pathname === item.href ? 'page' : undefined}
+                      >
+                        {item.label}
+                      </Link>
+                    </SheetClose>
                   ))}
                   {status === 'authenticated' ? (
                     <>
                       <span className="px-3 py-2 text-sm font-medium">Welcome, {session.user.name}</span>
-                      <Button variant="outline" onClick={() => signOut()} className="w-full">
-                        Logout
-                      </Button>
+                      <SheetClose asChild>
+                        <Button variant="outline" onClick={handleSignOut} className="w-full">
+                          Logout
+                        </Button>
+                      </SheetClose>
                     </>
                   ) : (
-                    <Button variant="outline" asChild className="w-full">
-                      <Link href="/login">
-                        Login
-                      </Link>
-                    </Button>
+                    <SheetClose asChild>
+                      <Button variant="outline" asChild className="w-full">
+                        <Link href="/login">
+                          Login
+                        </Link>
+                      </Button>
+                    </SheetClose>
                   )}
-                  <Button variant="outline" className="w-full">
-                    Order Now
-                  </Button>
-                  <Button className="w-full">
-                    Reserve
-                  </Button>
+                  <SheetClose asChild>
+                    <Button variant="outline" className="w-full">
+                      Order Now
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button className="w-full">
+                      Reserve
+                    </Button>
+                  </SheetClose>
                 </nav>
-                <VisuallyHidden>
-                  <SheetTitle>Menu</SheetTitle>
-                </VisuallyHidden>
               </SheetContent>
             </Sheet>
           </div>

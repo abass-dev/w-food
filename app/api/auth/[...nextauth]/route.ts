@@ -45,11 +45,43 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: '/login',
+    error: '/auth/error',
   },
   session: {
     strategy: 'jwt',
   },
   callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      if (account?.provider === "google") {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        })
+        if (existingUser) {
+          // If the user exists but doesn't have a Google account linked, update their account
+          const existingAccount = await prisma.account.findFirst({
+            where: { userId: existingUser.id, provider: "google" },
+          })
+          if (!existingAccount) {
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state,
+              },
+            })
+          }
+          return true
+        }
+      }
+      return true
+    },
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token.uid as string;
