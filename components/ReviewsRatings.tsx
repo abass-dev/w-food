@@ -1,11 +1,20 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Star, Send, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import LoginForm from '@/components/LoginForm'
 
 interface Review {
     id: string
@@ -21,10 +30,12 @@ interface ReviewsRatingsProps {
 }
 
 export function ReviewsRatings({ menuItemId }: ReviewsRatingsProps) {
+    const { data: session, status } = useSession()
     const [reviews, setReviews] = useState<Review[]>([])
     const [newReview, setNewReview] = useState({ rating: 0, comment: '' })
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false)
 
     useEffect(() => {
         fetchReviews()
@@ -57,6 +68,11 @@ export function ReviewsRatings({ menuItemId }: ReviewsRatingsProps) {
     }
 
     const handleSubmitReview = async () => {
+        if (status !== 'authenticated') {
+            setIsLoginDialogOpen(true)
+            return
+        }
+
         try {
             const response = await fetch(`/api/reviews/${menuItemId}`, {
                 method: 'POST',
@@ -85,6 +101,12 @@ export function ReviewsRatings({ menuItemId }: ReviewsRatingsProps) {
                 variant: "destructive",
             })
         }
+    }
+
+    const handleLoginSuccess = () => {
+        setIsLoginDialogOpen(false)
+        // After successful login, the user can submit their review
+        handleSubmitReview()
     }
 
     if (isLoading) {
@@ -151,6 +173,17 @@ export function ReviewsRatings({ menuItemId }: ReviewsRatingsProps) {
                     ))}
                 </div>
             )}
+            <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Login Required</DialogTitle>
+                        <DialogDescription>
+                            Please log in or create an account to submit a review.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <LoginForm onSuccess={handleLoginSuccess} />
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

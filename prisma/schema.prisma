@@ -184,3 +184,10 @@ model Review {
   menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
 }
 
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
