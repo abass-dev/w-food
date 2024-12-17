@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast'
 import { MenuItemSkeleton } from '@/components/MenuItemSkeleton'
 import { useSession } from 'next-auth/react'
 import LoginForm from '@/components/LoginForm'
+import { ReviewsRatings } from '@/components/ReviewsRatings'
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,11 @@ export default function MenuItemPage() {
         setMenuItem(data)
       } catch (error) {
         console.error('Error fetching menu item:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load menu item. Please try again later.",
+          variant: "destructive",
+        })
         router.push('/menu')
       } finally {
         setIsLoading(false)
@@ -145,6 +151,7 @@ export default function MenuItemPage() {
           </div>
         </div>
       </motion.div>
+      <ReviewsRatings menuItemId={menuItem.id} />
       <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
         <DialogContent>
           <DialogHeader>

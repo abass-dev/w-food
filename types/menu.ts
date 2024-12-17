@@ -8,7 +8,8 @@ export interface MenuItem {
     id: string;
     name: string;
   };
-  quantity?: number; // Add this line
+  quantity?: number;
+  isFavorite: boolean;
 }
 
 export interface Category {
@@ -16,7 +17,6 @@ export interface Category {
   name: string;
 }
 
-// Add a new interface for cart items
 export interface CartItem extends MenuItem {
   quantity: number;
 }

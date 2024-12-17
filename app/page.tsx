@@ -8,10 +8,24 @@ import { Button } from '@/components/ui/button'
 import { MenuCarousel } from '@/components/MenuCarousel'
 import { MenuItem } from '@/types/menu'
 import { MenuItemSkeleton } from '@/components/MenuItemSkeleton'
+import { useSession } from 'next-auth/react'
+import { Heart } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import LoginForm from '@/components/LoginForm'
 
 export default function Home() {
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
+  const { data: session } = useSession()
 
   useEffect(() => {
     async function fetchFeaturedItems() {
@@ -28,7 +42,51 @@ export default function Home() {
     fetchFeaturedItems()
   }, [])
 
+  const handleToggleFavorite = async (item: MenuItem) => {
+    if (!session) {
+      setSelectedItem(item)
+      setIsLoginDialogOpen(true)
+      return
+    }
 
+    try {
+      const response = await fetch(`/api/user/favorites/${item.id}`, {
+        method: item.isFavorite ? 'DELETE' : 'POST',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update favorite')
+      }
+
+      setFeaturedItems(prevItems =>
+        prevItems.map(prevItem =>
+          prevItem.id === item.id
+            ? { ...prevItem, isFavorite: !prevItem.isFavorite }
+            : prevItem
+        )
+      )
+
+      toast({
+        title: item.isFavorite ? "Removed from favorites" : "Added to favorites",
+        description: `${item.name} has been ${item.isFavorite ? 'removed from' : 'added to'} your favorites.`,
+      })
+    } catch (error) {
+      console.error('Error updating favorite:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update favorite. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleLoginSuccess = () => {
+    setIsLoginDialogOpen(false)
+    if (selectedItem) {
+      handleToggleFavorite(selectedItem)
+    }
+  }
 
   return (
     <div className="container mx-auto px-6 py-12">
@@ -57,26 +115,41 @@ export default function Home() {
         transition={{ delay: 0.2, duration: 0.5 }}
       >
         <h2 className="text-3xl font-bold mb-6 text-center">Our Specialties</h2>
-        {isLoading ? <MenuItemSkeleton /> : ''}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredItems.map((item) => (
-            <Link href={`/menu/${item.id}`} key={item.id}>
+        {isLoading ? <MenuItemSkeleton /> : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredItems.map((item) => (
               <motion.div
+                key={item.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Image src={item.image} alt={item.name} width={300} height={200} className="w-full" />
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
-                  <p className="text-muted-foreground">{item.description}</p>
-                  <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Category: {item.category.name}</p>
+                <Link href={`/menu/${item.id}`}>
+                  <Image src={item.image} alt={item.name} width={300} height={200} className="w-full" />
+                  <div className="p-4">
+                    <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+                    <p className="text-muted-foreground">{item.description}</p>
+                    <p className="mt-2 font-bold">${item.price.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Category: {item.category.name}</p>
+                  </div>
+                </Link>
+                <div className="px-4 pb-4">
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleToggleFavorite(item)
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Heart className={`mr-2 h-4 w-4 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                    {item.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+                  </Button>
                 </div>
               </motion.div>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </motion.section>
 
       <motion.section
@@ -86,8 +159,7 @@ export default function Home() {
         transition={{ delay: 0.4, duration: 0.5 }}
       >
         <h2 className="text-3xl font-bold mb-6 text-center">Featured Menu Items</h2>
-        {isLoading ? <MenuItemSkeleton /> : ''}
-        <MenuCarousel items={featuredItems} />
+        {isLoading ? <MenuItemSkeleton /> : <MenuCarousel items={featuredItems} />}
       </motion.section>
 
       <motion.section
@@ -104,6 +176,18 @@ export default function Home() {
           <Link href="/contact">Contact Us</Link>
         </Button>
       </motion.section>
+
+      <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Login Required</DialogTitle>
+            <DialogDescription>
+              Please log in or create an account to add favorites.
+            </DialogDescription>
+          </DialogHeader>
+          <LoginForm onSuccess={handleLoginSuccess} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

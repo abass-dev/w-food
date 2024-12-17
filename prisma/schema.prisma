@@ -47,6 +47,10 @@ model User {
   isVerified    Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  preferences   UserPreference?
+  favoriteDishes FavoriteDish[]
+  orders        Order[]
+  reviews     Review[]
 }
 
 model VerificationToken {
@@ -87,19 +91,23 @@ model MenuItem {
   categoryId  String
   orderItems  OrderItem[]
   cartItems   CartItem[]
+  favoriteDishes FavoriteDish[]
+  reviews     Review[]
 }
 
 model Order {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  status      OrderStatus
-  total       Decimal
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  status        OrderStatus
+  total         Decimal
   restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
   restaurantId String
   customer    Customer @relation(fields: [customerId], references: [id])
   customerId  String
   orderItems  OrderItem[]
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
 }
 
 model OrderItem {
@@ -143,5 +151,36 @@ enum OrderStatus {
   READY
   DELIVERED
   CANCELLED
+}
+
+model UserPreference {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  dietaryRestrictions String[]
+  allergies     String[]
+  spicePreference String?
+}
+
+model FavoriteDish {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  menuItemId    String
+  menuItem      MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, menuItemId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  userId      String
+  menuItemId  String
+  rating      Int
+  comment     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
 }
 

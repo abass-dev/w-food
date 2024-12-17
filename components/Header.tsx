@@ -46,7 +46,7 @@ export default function Header() {
 
   return (
     <header className="bg-background shadow-md sticky top-0 z-50">
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="container mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link href="/" className="text-2xl font-bold text-foreground">
@@ -77,6 +77,9 @@ export default function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut}>
                     Logout
                   </DropdownMenuItem>
@@ -101,7 +104,7 @@ export default function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                <nav className="flex flex-col space-y-4 mt-8">
+                <nav className="flex flex-col space-y-4 mt-8" aria-label="Mobile navigation">
                   {navItems.map((item) => (
                     <SheetClose asChild key={item.href}>
                       <Link
