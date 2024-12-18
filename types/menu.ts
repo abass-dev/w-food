@@ -21,3 +21,16 @@ export interface CartItem extends MenuItem {
   quantity: number;
 }
 
+export interface Reservation {
+  id: string;
+  date: Date;
+  time: string;
+}
+
+export interface AdminReservation extends Reservation {
+  user: {
+    name: string;
+    email: string;
+  };
+}
+

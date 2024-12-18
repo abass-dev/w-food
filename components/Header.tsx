@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/mode-toggle'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown, ShoppingBag, User } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { Cart } from '@/components/Cart'
 import {
@@ -17,11 +17,12 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
   SheetTitle,
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet"
-import { VisuallyHidden } from './ui/visually-hidden'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -58,7 +59,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-foreground hover:text-foreground/80 px-3 py-2 rounded-md text-sm font-medium ${pathname === item.href ? 'bg-primary/10' : ''
+                className={`text-foreground hover:text-foreground/80 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === item.href ? 'bg-primary/10' : ''
                   }`}
                 aria-current={pathname === item.href ? 'page' : undefined}
               >
@@ -72,13 +73,19 @@ export default function Header() {
             {status === 'authenticated' ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    {session.user.name} <ChevronDown className="ml-2 h-4 w-4" />
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={session.user.image || ''} alt={session.user.name || ''} />
+                      <AvatarFallback>{session.user.name ? session.user.name[0] : 'U'}</AvatarFallback>
+                    </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut}>
                     Logout
@@ -90,8 +97,13 @@ export default function Header() {
                 <Link href="/login">Login</Link>
               </Button>
             )}
-            <Button variant="outline">Order Now</Button>
-            <Button>Reserve</Button>
+            <Button variant="outline">
+              <ShoppingBag className="mr-2 h-4 w-4" />
+              Order Now
+            </Button>
+            <Button>
+              Reserve
+            </Button>
           </div>
           <div className="flex lg:hidden items-center space-x-2">
             <Cart aria-label="Shopping cart" />
@@ -103,13 +115,15 @@ export default function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
                 <nav className="flex flex-col space-y-4 mt-8" aria-label="Mobile navigation">
                   {navItems.map((item) => (
                     <SheetClose asChild key={item.href}>
                       <Link
                         href={item.href}
-                        className={`text-foreground hover:text-foreground/80 px-3 py-2 rounded-md text-sm font-medium ${pathname === item.href ? 'bg-primary/10' : ''
+                        className={`text-foreground hover:text-foreground/80 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === item.href ? 'bg-primary/10' : ''
                           }`}
                         aria-current={pathname === item.href ? 'page' : undefined}
                       >
@@ -119,7 +133,23 @@ export default function Header() {
                   ))}
                   {status === 'authenticated' ? (
                     <>
-                      <span className="px-3 py-2 text-sm font-medium">Welcome, {session.user.name}</span>
+                      <div className="flex items-center space-x-2 px-3 py-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={session.user.image || ''} alt={session.user.name || ''} />
+                          <AvatarFallback>{session.user.name ? session.user.name[0] : 'U'}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">Welcome, {session.user.name}</span>
+                      </div>
+                      <SheetClose asChild>
+                        <Link href="/dashboard" className="block px-3 py-2 text-sm font-medium">
+                          Dashboard
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link href="/profile" className="block px-3 py-2 text-sm font-medium">
+                          Profile
+                        </Link>
+                      </SheetClose>
                       <SheetClose asChild>
                         <Button variant="outline" onClick={handleSignOut} className="w-full">
                           Logout
@@ -137,6 +167,7 @@ export default function Header() {
                   )}
                   <SheetClose asChild>
                     <Button variant="outline" className="w-full">
+                      <ShoppingBag className="mr-2 h-4 w-4" />
                       Order Now
                     </Button>
                   </SheetClose>

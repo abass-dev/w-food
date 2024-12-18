@@ -9,8 +9,7 @@ export default async function AdminLayout({
 }) {
     const session = await getServerSession(authOptions)
 
-    console.log('Admin Layout - Session:', session)
-    console.log('Admin Layout - User Role:', session?.user?.role)
+    console.log('Admin Layout - Session:', JSON.stringify(session, null, 2))
 
     if (!session || session.user.role !== 'ADMIN') {
         console.log('Redirecting to login - Not authenticated or not admin')
@@ -30,6 +29,16 @@ export default async function AdminLayout({
                     <li>
                         <a href="/admin/menu" className="text-blue-600 hover:underline">
                             Manage Menu
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/reservations" className="text-blue-600 hover:underline">
+                            Manage Reservations
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/users" className="text-blue-600 hover:underline">
+                            Manage Users
                         </a>
                     </li>
                 </ul>
