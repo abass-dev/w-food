@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react'
 import PastOrders from '@/components/PastOrders'
 import Preferences from '@/components/Preferences'
 import FavoriteDishes from '@/components/FavoriteDishes'
+import Reservations from '@/components/Reservations'
 
 export default function Dashboard() {
     const { data: session, status } = useSession()
@@ -43,6 +44,7 @@ export default function Dashboard() {
             <Tabs defaultValue="orders">
                 <TabsList className="mb-4">
                     <TabsTrigger value="orders">Past Orders</TabsTrigger>
+                    <TabsTrigger value="reservations">Reservations</TabsTrigger>
                     <TabsTrigger value="preferences">Preferences</TabsTrigger>
                     <TabsTrigger value="favorites">Favorite Dishes</TabsTrigger>
                 </TabsList>
@@ -54,6 +56,17 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent>
                             <PastOrders />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="reservations">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Reservations</CardTitle>
+                            <CardDescription>Manage your reservations</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Reservations />
                         </CardContent>
                     </Card>
                 </TabsContent>
