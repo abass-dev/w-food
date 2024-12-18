@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Select } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
+import { Category } from '@/types/menu'
 
 export function AddMenuItemForm() {
     const [formData, setFormData] = useState({
@@ -15,14 +16,36 @@ export function AddMenuItemForm() {
         categoryId: '',
         image: '',
     })
+    const [categories, setCategories] = useState<Category[]>([])
+    const [isLoading, setIsLoading] = useState(false)
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch('/api/categories')
+                if (!response.ok) throw new Error('Failed to fetch categories')
+                const data = await response.json()
+                setCategories(data)
+            } catch (error) {
+                console.error('Error fetching categories:', error)
+                toast({
+                    title: "Error",
+                    description: "Failed to load categories. Please try again.",
+                    variant: "destructive",
+                })
+            }
+        }
+
+        fetchCategories()
+    }, [])
+
+    const handleChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        setIsLoading(true)
         try {
             const response = await fetch('/api/admin/menu', {
                 method: 'POST',
@@ -50,6 +73,8 @@ export function AddMenuItemForm() {
                 description: "Failed to add menu item. Please try again.",
                 variant: "destructive",
             })
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -58,14 +83,14 @@ export function AddMenuItemForm() {
             <Input
                 name="name"
                 value={formData.name}
-                onChange={handleChange}
+                onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Item Name"
                 required
             />
             <Textarea
                 name="description"
                 value={formData.description}
-                onChange={handleChange}
+                onChange={(e) => handleChange('description', e.target.value)}
                 placeholder="Description"
                 required
             />
@@ -73,7 +98,7 @@ export function AddMenuItemForm() {
                 name="price"
                 type="number"
                 value={formData.price}
-                onChange={handleChange}
+                onChange={(e) => handleChange('price', e.target.value)}
                 placeholder="Price"
                 step="0.01"
                 required
@@ -81,20 +106,30 @@ export function AddMenuItemForm() {
             <Select
                 name="categoryId"
                 value={formData.categoryId}
-                onChange={handleChange}
+                onValueChange={(value) => handleChange('categoryId', value)}
                 required
             >
-                <option value="">Select a category</option>
-                {/* Add category options here */}
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                    {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
             </Select>
             <Input
                 name="image"
                 value={formData.image}
-                onChange={handleChange}
+                onChange={(e) => handleChange('image', e.target.value)}
                 placeholder="Image URL"
                 required
             />
-            <Button type="submit">Add Menu Item</Button>
+            <Button type="submit" disabled={isLoading}>
+                {isLoading ? 'Adding...' : 'Add Menu Item'}
+            </Button>
         </form>
     )
 }

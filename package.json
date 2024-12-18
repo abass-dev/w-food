@@ -40,6 +40,7 @@
     "nodemailer": "^6.9.16",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react-error-boundary": "^4.1.2",
     "react-redux": "^9.1.2",
     "redux-persist": "^6.0.0",
     "tailwind-merge": "^2.5.5",

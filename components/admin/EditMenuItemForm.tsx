@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Select } from '@/components/ui/select'
-import { MenuItem } from '@/types/menu'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { MenuItem, Category } from '@/types/menu'
+import { toast } from '@/hooks/use-toast'
+import { Loader2 } from 'lucide-react'
 
 interface EditMenuItemFormProps {
     item: MenuItem
@@ -14,16 +16,64 @@ interface EditMenuItemFormProps {
 }
 
 export function EditMenuItemForm({ item, onUpdate, onCancel }: EditMenuItemFormProps) {
-    const [formData, setFormData] = useState(item)
+    const [formData, setFormData] = useState<MenuItem>(item)
+    const [categories, setCategories] = useState<Category[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [isCategoriesLoading, setIsCategoriesLoading] = useState(true)
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch('/api/categories')
+                if (!response.ok) throw new Error('Failed to fetch categories')
+                const data = await response.json()
+                setCategories(data)
+            } catch (error) {
+                console.error('Error fetching categories:', error)
+                toast({
+                    title: "Error",
+                    description: "Failed to load categories. Please try again.",
+                    variant: "destructive",
+                })
+            } finally {
+                setIsCategoriesLoading(false)
+            }
+        }
+
+        fetchCategories()
+    }, [])
+
+    const handleChange = (name: string, value: string | number) => {
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        onUpdate(formData)
+        setIsLoading(true)
+        try {
+            const updatedItem: MenuItem = {
+                ...formData,
+                category: categories.find(cat => cat.id === formData.category.id) || formData.category
+            }
+            await onUpdate(updatedItem)
+            toast({
+                title: "Success",
+                description: "Menu item updated successfully.",
+            })
+        } catch (error) {
+            console.error('Error updating menu item:', error)
+            toast({
+                title: "Error",
+                description: "Failed to update menu item. Please try again.",
+                variant: "destructive",
+            })
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    if (isCategoriesLoading) {
+        return <Loader2 className="h-8 w-8 animate-spin" />
     }
 
     return (
@@ -31,14 +81,14 @@ export function EditMenuItemForm({ item, onUpdate, onCancel }: EditMenuItemFormP
             <Input
                 name="name"
                 value={formData.name}
-                onChange={handleChange}
+                onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Item Name"
                 required
             />
             <Textarea
                 name="description"
                 value={formData.description}
-                onChange={handleChange}
+                onChange={(e) => handleChange('description', e.target.value)}
                 placeholder="Description"
                 required
             />
@@ -46,7 +96,7 @@ export function EditMenuItemForm({ item, onUpdate, onCancel }: EditMenuItemFormP
                 name="price"
                 type="number"
                 value={formData.price}
-                onChange={handleChange}
+                onChange={(e) => handleChange('price', parseFloat(e.target.value))}
                 placeholder="Price"
                 step="0.01"
                 required
@@ -54,22 +104,33 @@ export function EditMenuItemForm({ item, onUpdate, onCancel }: EditMenuItemFormP
             <Select
                 name="categoryId"
                 value={formData.category.id}
-                onChange={handleChange}
+                onValueChange={(value) => handleChange('category', { id: value, name: categories.find(cat => cat.id === value)?.name || '' })}
                 required
             >
-                <option value="">Select a category</option>
-                {/* Add category options here */}
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                    {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
             </Select>
             <Input
                 name="image"
                 value={formData.image}
-                onChange={handleChange}
+                onChange={(e) => handleChange('image', e.target.value)}
                 placeholder="Image URL"
                 required
             />
             <div className="flex justify-end space-x-2">
                 <Button type="button" onClick={onCancel} variant="outline">Cancel</Button>
-                <Button type="submit">Update Menu Item</Button>
+                <Button type="submit" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {isLoading ? 'Updating...' : 'Update Menu Item'}
+                </Button>
             </div>
         </form>
     )
