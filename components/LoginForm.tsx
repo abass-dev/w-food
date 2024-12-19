@@ -9,19 +9,27 @@ import { Loader2, Chrome } from 'lucide-react'
 interface LoginFormProps {
     onSubmit: (email: string, password: string) => Promise<void>
     isLoading: boolean
+    onSuccess: () => void
 }
 
-export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
+export default function LoginForm({ onSubmit, isLoading, onSuccess }: LoginFormProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        onSubmit(email, password)
+        try {
+            await onSubmit(email, password)
+            onSuccess()
+        } catch (error) {
+            console.error('Login failed:', error)
+        }
     }
 
     const handleGoogleSignIn = () => {
         signIn('google', { callbackUrl: '/' })
+            .then(() => onSuccess())
+            .catch((error) => console.error('Google sign-in failed:', error))
     }
 
     return (

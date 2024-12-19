@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MenuItem, Category } from '@/types/menu'
 import { toast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import { uploadImage } from '@/lib/firebase'
 
 interface EditMenuItemFormProps {
     item: MenuItem
@@ -20,6 +21,7 @@ export function EditMenuItemForm({ item, onUpdate, onCancel }: EditMenuItemFormP
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [isCategoriesLoading, setIsCategoriesLoading] = useState(true)
+    const [imageFile, setImageFile] = useState<File | null>(null)
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -47,12 +49,24 @@ export function EditMenuItemForm({ item, onUpdate, onCancel }: EditMenuItemFormP
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setImageFile(e.target.files[0])
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
         try {
+            let imageUrl = formData.image
+            if (imageFile) {
+                imageUrl = await uploadImage(imageFile)
+            }
+
             const updatedItem: MenuItem = {
                 ...formData,
+                image: imageUrl,
                 category: categories.find(cat => cat.id === formData.category.id) || formData.category
             }
             await onUpdate(updatedItem)
@@ -119,12 +133,14 @@ export function EditMenuItemForm({ item, onUpdate, onCancel }: EditMenuItemFormP
                 </SelectContent>
             </Select>
             <Input
-                name="image"
-                value={formData.image}
-                onChange={(e) => handleChange('image', e.target.value)}
-                placeholder="Image URL"
-                required
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="cursor-pointer"
             />
+            {formData.image && (
+                <img src={formData.image} alt="Current menu item" className="w-32 h-32 object-cover rounded" />
+            )}
             <div className="flex justify-end space-x-2">
                 <Button type="button" onClick={onCancel} variant="outline">Cancel</Button>
                 <Button type="submit" disabled={isLoading}>

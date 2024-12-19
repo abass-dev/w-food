@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
 import { Category } from '@/types/menu'
+import { uploadImage } from '@/lib/firebase'
 
 export function AddMenuItemForm() {
     const [formData, setFormData] = useState({
@@ -14,8 +15,8 @@ export function AddMenuItemForm() {
         description: '',
         price: '',
         categoryId: '',
-        image: '',
     })
+    const [imageFile, setImageFile] = useState<File | null>(null)
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(false)
 
@@ -43,16 +44,31 @@ export function AddMenuItemForm() {
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setImageFile(e.target.files[0])
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
         try {
+            let imageUrl = ''
+            if (imageFile) {
+                imageUrl = await uploadImage(imageFile)
+            }
+
             const response = await fetch('/api/admin/menu', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    price: parseFloat(formData.price),
+                    image: imageUrl,
+                }),
             })
             if (!response.ok) throw new Error('Failed to add menu item')
             setFormData({
@@ -60,8 +76,8 @@ export function AddMenuItemForm() {
                 description: '',
                 price: '',
                 categoryId: '',
-                image: '',
             })
+            setImageFile(null)
             toast({
                 title: "Success",
                 description: "Menu item added successfully.",
@@ -121,11 +137,10 @@ export function AddMenuItemForm() {
                 </SelectContent>
             </Select>
             <Input
-                name="image"
-                value={formData.image}
-                onChange={(e) => handleChange('image', e.target.value)}
-                placeholder="Image URL"
-                required
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="cursor-pointer"
             />
             <Button type="submit" disabled={isLoading}>
                 {isLoading ? 'Adding...' : 'Add Menu Item'}

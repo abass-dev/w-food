@@ -29,10 +29,9 @@ export function Cart() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" className="flex items-center">
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          <span>{totalItems} items</span>
-          <span className="ml-2">${totalPrice.toFixed(2)}</span>
+        <Button variant="outline" className={`flex items-center ${totalItems > 0 && 'bg-red-500 text-white'}`}>
+          <ShoppingCart className="h-4 w-4" />
+          {totalItems > 0 && <span className="ml-2">{totalItems}</span>}
         </Button>
       </SheetTrigger>
       <SheetContent>

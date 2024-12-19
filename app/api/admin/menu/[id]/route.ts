@@ -11,7 +11,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     try {
-        const { id } = await params
+        const { id } = params
         const { name, description, price, categoryId, image } = await req.json()
         const updatedMenuItem = await prisma.menuItem.update({
             where: { id },

@@ -49,7 +49,6 @@ model User {
   updatedAt     DateTime  @updatedAt
   preferences   UserPreference?
   favoriteDishes FavoriteDish[]
-  orders        Order[]
   reviews     Review[]
   role        Role     @default(USER)
   reservations Reservation[]
@@ -106,23 +105,24 @@ model Order {
   updatedAt     DateTime @updatedAt
   status        OrderStatus
   total         Decimal
-  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
-  restaurantId String
-  customer    Customer @relation(fields: [customerId], references: [id])
-  customerId  String
-  orderItems  OrderItem[]
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  customerName  String
+  customerEmail String
+  customerPhone String
+  items         OrderItem[]
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  customerId    String?
+  customer      Customer?  @relation(fields: [customerId], references: [id])
 }
 
 model OrderItem {
-  id          String   @id @default(cuid())
-  quantity    Int
-  price       Decimal
-  order       Order    @relation(fields: [orderId], references: [id])
-  orderId     String
-  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
-  menuItemId  String
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  menuItemId String
+  menuItem  MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity  Int
+  price     Decimal
 }
 
 model Customer {
@@ -152,6 +152,7 @@ model CartItem {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PREPARING
   READY
   DELIVERED
@@ -219,5 +220,4 @@ enum ReservationStatus {
   CONFIRMED
   CANCELLED
 }
-
 

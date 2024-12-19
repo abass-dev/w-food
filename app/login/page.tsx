@@ -24,6 +24,9 @@ export default function LoginPage() {
     }
   }, [status, router, callbackUrl, session])
 
+  const handleOnSuccess = () => {
+    router.push(callbackUrl)
+  }
   const handleSubmit = async (email: string, password: string) => {
     setIsLoading(true)
 
@@ -82,7 +85,7 @@ export default function LoginPage() {
   return (
     <div className="container mx-auto px-6 py-12 max-w-md">
       <h1 className="text-3xl font-bold mb-6 text-center">Login</h1>
-      <LoginForm onSubmit={handleSubmit} isLoading={isLoading} />
+      <LoginForm onSuccess={handleOnSuccess} onSubmit={handleSubmit} isLoading={isLoading} />
     </div>
   )
 }

@@ -13,15 +13,6 @@ export async function GET(req: Request) {
     try {
         const users = await prisma.user.findMany({
             include: {
-                orders: {
-                    include: {
-                        orderItems: {
-                            include: {
-                                menuItem: true
-                            }
-                        }
-                    }
-                },
                 reviews: {
                     include: {
                         menuItem: true
@@ -35,37 +26,50 @@ export async function GET(req: Request) {
             },
         })
 
-        const formattedUsers = users.map(user => ({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            phoneNumber: user.phoneNumber,
-            createdAt: user.createdAt,
-            emailVerified: user.emailVerified,
-            image: user.image,
-            orders: user.orders.map(order => ({
-                id: order.id,
-                createdAt: order.createdAt,
-                total: order.total,
-                status: order.status,
-                items: order.orderItems.map(item => ({
-                    name: item.menuItem.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                }))
-            })),
-            reviews: user.reviews.map(review => ({
-                id: review.id,
-                rating: review.rating,
-                comment: review.comment,
-                createdAt: review.createdAt,
-                menuItemName: review.menuItem.name,
-            })),
-            favoriteDishes: user.favoriteDishes.map(fav => ({
-                id: fav.id,
-                name: fav.menuItem.name,
-            })),
+        const formattedUsers = await Promise.all(users.map(async (user) => {
+            const orders = await prisma.order.findMany({
+                where: { customerEmail: user.email! },
+                include: {
+                    items: {
+                        include: {
+                            menuItem: true
+                        }
+                    }
+                }
+            })
+
+            return {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phoneNumber: user.phoneNumber,
+                createdAt: user.createdAt,
+                emailVerified: user.emailVerified,
+                image: user.image,
+                orders: orders.map(order => ({
+                    id: order.id,
+                    createdAt: order.createdAt,
+                    total: order.total.toNumber(),
+                    status: order.status,
+                    items: order.items.map(item => ({
+                        name: item.menuItem.name,
+                        quantity: item.quantity,
+                        price: item.price.toNumber(),
+                    }))
+                })),
+                reviews: user.reviews.map(review => ({
+                    id: review.id,
+                    rating: review.rating,
+                    comment: review.comment,
+                    createdAt: review.createdAt,
+                    menuItemName: review.menuItem.name,
+                })),
+                favoriteDishes: user.favoriteDishes.map(fav => ({
+                    id: fav.id,
+                    name: fav.menuItem.name,
+                })),
+            }
         }))
 
         return NextResponse.json(formattedUsers)

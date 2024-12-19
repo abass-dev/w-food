@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/mode-toggle'
-import { Menu, X, ChevronDown, ShoppingBag, User } from 'lucide-react'
+import { Menu, ShoppingBag } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { Cart } from '@/components/Cart'
 import {
@@ -23,13 +23,12 @@ import {
   SheetClose,
 } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Image from 'next/image'
 
 const navItems = [
   { href: '/', label: 'Home' },
   { href: '/menu', label: 'Menu' },
   { href: '/reservations', label: 'Reservations' },
-  { href: '/about', label: 'About Us' },
-  { href: '/contact', label: 'Contact' },
 ]
 
 export default function Header() {
@@ -51,7 +50,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link href="/" className="text-2xl font-bold text-foreground">
-              Wajabatt Food
+              <Image className='w-auto h-auto' width={250} height={200} alt='Wajabatt Food Logo' src='/images/wajabatt-food-logo.png' />
             </Link>
           </div>
           <div className="hidden lg:flex items-center space-x-4">
@@ -84,6 +83,11 @@ export default function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
+                  {status === 'authenticated' && session.user.role === 'ADMIN' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Profile</Link>
                   </DropdownMenuItem>
@@ -145,6 +149,13 @@ export default function Header() {
                           Dashboard
                         </Link>
                       </SheetClose>
+                      {status === 'authenticated' && session.user.role === 'ADMIN' && (
+                        <SheetClose asChild>
+                          <Link href="/admin" className="block px-3 py-2 text-sm font-medium">
+                            Admin Dashboard
+                          </Link>
+                        </SheetClose>
+                      )}
                       <SheetClose asChild>
                         <Link href="/profile" className="block px-3 py-2 text-sm font-medium">
                           Profile

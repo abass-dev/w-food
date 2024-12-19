@@ -40,7 +40,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (status === 'unauthenticated') {
-            router.push('/login')
+            router.push('/login?callbackUrl=/profile')
         } else if (status === 'authenticated') {
             fetchProfile()
         }

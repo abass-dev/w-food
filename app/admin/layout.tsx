@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import Link from 'next/link'
 
 export default async function AdminLayout({
     children,
@@ -8,8 +9,6 @@ export default async function AdminLayout({
     children: React.ReactNode
 }) {
     const session = await getServerSession(authOptions)
-
-    console.log('Admin Layout - Session:', JSON.stringify(session, null, 2))
 
     if (!session || session.user.role !== 'ADMIN') {
         console.log('Redirecting to login - Not authenticated or not admin')
@@ -22,24 +21,29 @@ export default async function AdminLayout({
                 <h2 className="text-2xl font-bold mb-6">Admin Panel</h2>
                 <ul className="space-y-2">
                     <li>
-                        <a href="/admin" className="text-blue-600 hover:underline">
+                        <Link href="/admin" className="text-blue-600 hover:underline">
                             Dashboard
-                        </a>
+                        </Link>
                     </li>
                     <li>
-                        <a href="/admin/menu" className="text-blue-600 hover:underline">
+                        <Link href="/admin/menu" className="text-blue-600 hover:underline">
                             Manage Menu
-                        </a>
+                        </Link>
                     </li>
                     <li>
-                        <a href="/admin/reservations" className="text-blue-600 hover:underline">
+                        <Link href="/admin/orders" className="text-blue-600 hover:underline">
+                            Manage Orders
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/admin/reservations" className="text-blue-600 hover:underline">
                             Manage Reservations
-                        </a>
+                        </Link>
                     </li>
                     <li>
-                        <a href="/admin/users" className="text-blue-600 hover:underline">
+                        <Link href="/admin/users" className="text-blue-600 hover:underline">
                             Manage Users
-                        </a>
+                        </Link>
                     </li>
                 </ul>
             </nav>

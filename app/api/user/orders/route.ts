@@ -12,14 +12,14 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized or invalid session' }, { status: 401 })
         }
 
-        console.log('Fetching orders for user:', session.user.id)
+        console.log('Fetching orders for user:', session.user.email)
 
         const orders = await prisma.order.findMany({
             where: {
-                userId: session.user.id,
+                customerEmail: session.user.email,
             },
             include: {
-                orderItems: {
+                items: {
                     include: {
                         menuItem: true,
                     },
@@ -34,7 +34,7 @@ export async function GET() {
 
         if (!orders || orders.length === 0) {
             console.log('No orders found for user:', session.user.id)
-            return NextResponse.json({ orders: [] })
+            return NextResponse.json([])
         }
 
         const formattedOrders = orders.map(order => ({
@@ -42,8 +42,11 @@ export async function GET() {
             createdAt: order.createdAt.toISOString(),
             status: order.status,
             total: order.total.toNumber(),
-            items: order.orderItems.map(item => ({
-                name: item.menuItem.name,
+            items: order.items.map(item => ({
+                id: item.id,
+                menuItem: {
+                    name: item.menuItem.name,
+                },
                 quantity: item.quantity,
                 price: item.price.toNumber(),
             })),
@@ -51,7 +54,7 @@ export async function GET() {
 
         console.log('Formatted orders:', JSON.stringify(formattedOrders, null, 2))
 
-        return NextResponse.json({ orders: formattedOrders })
+        return NextResponse.json(formattedOrders)
     } catch (error) {
         console.error('Error in GET /api/user/orders:', error)
         if (error instanceof Error) {

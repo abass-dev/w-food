@@ -17,10 +17,11 @@ import { ReviewsRatings } from '@/components/ReviewsRatings'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
+import { signIn } from 'next-auth/react';
 
 export default function MenuItemPage() {
   const [menuItem, setMenuItem] = useState<MenuItem | null>(null)
@@ -68,26 +69,88 @@ export default function MenuItemPage() {
     }
   }
 
-  const handleWhatsAppOrder = () => {
-    if (session) {
-      if (menuItem) {
-        const message = encodeURIComponent(`Hello, I'd like to order ${quantity} ${menuItem.name}(s) for a total of $${(menuItem.price * quantity).toFixed(2)}.`)
-        const whatsappUrl = `https://wa.me/22798241136?text=${message}`
-        window.open(whatsappUrl, '_blank')
+  const handleWhatsAppOrder = async () => {
+    if (session && menuItem) {
+      try {
+        setIsLoading(true);
+        const orderData = {
+          menuItemId: menuItem.id,
+          quantity: quantity,
+          total: menuItem.price * quantity,
+        };
+        console.log('Sending order data:', orderData);
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create order');
+        }
+
+        const order = await response.json();
+        console.log('Received order:', order);
+
+        const message = encodeURIComponent(
+          `Hello, I'd like to confirm my order:
+
+Order #${order.id}
+Item: ${quantity} x ${menuItem.name}
+Total: $${order.total}
+
+Customer: ${order.customerName}
+Email: ${order.customerEmail}
+Phone: ${order.customerPhone}
+
+Please confirm my order. Thank you!`
+        );
+        const whatsappUrl = `https://wa.me/22798241163?text=${message}`;
+        window.open(whatsappUrl, '_blank');
+
+        toast({
+          title: "Order Created",
+          description: "Your order has been created and sent via WhatsApp.",
+        });
+      } catch (error) {
+        console.error('Error creating order:', error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to create order. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
     } else {
-      setIsLoginDialogOpen(true)
+      setIsLoginDialogOpen(true);
     }
-  }
+  };
 
-  const handleLoginSuccess = () => {
-    setIsLoginDialogOpen(false)
-    if (menuItem) {
-      const message = encodeURIComponent(`Hello, I'd like to order ${quantity} ${menuItem.name}(s) for a total of $${(menuItem.price * quantity).toFixed(2)}.`)
-      const whatsappUrl = `https://wa.me/22798241136?text=${message}`
-      window.open(whatsappUrl, '_blank')
+  const handleLoginSubmit = async (email: string, password: string) => {
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
+      });
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+      setIsLoginDialogOpen(false);
+      handleWhatsAppOrder(); // Attempt to create the order after successful login
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: error instanceof Error ? error.message : "An error occurred during login. Please try again.",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   if (isLoading) {
     return <MenuItemSkeleton />
@@ -160,7 +223,7 @@ export default function MenuItemPage() {
               Please log in or create an account to order via WhatsApp.
             </DialogDescription>
           </DialogHeader>
-          <LoginForm onSuccess={handleLoginSuccess} />
+          <LoginForm onSubmit={handleLoginSubmit} isLoading={isLoading} onSuccess={() => { }} />
         </DialogContent>
       </Dialog>
     </div>
