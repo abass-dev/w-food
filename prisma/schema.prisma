@@ -107,6 +107,7 @@ model Order {
   total         Decimal
   customerName  String
   customerEmail String
+  description   String?
   customerPhone String
   items         OrderItem[]
   restaurantId  String

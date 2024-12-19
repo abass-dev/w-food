@@ -7,9 +7,9 @@ import Link from 'next/link'
 import { Loader2, Chrome } from 'lucide-react'
 
 interface LoginFormProps {
-    onSubmit: (email: string, password: string) => Promise<void>
-    isLoading: boolean
-    onSuccess: () => void
+    onSubmit: (email: string, password: string) => Promise<void>;
+    isLoading: boolean;
+    onSuccess: () => void;
 }
 
 export default function LoginForm({ onSubmit, isLoading, onSuccess }: LoginFormProps) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { sendOrderConfirmationEmail } from '@/lib/email';
 import { Prisma } from '@prisma/client'
 
 export async function POST(req: Request) {
@@ -77,17 +78,14 @@ export async function POST(req: Request) {
 
         console.log('Order created successfully:', order);
 
-        // Add manager's name to the order details
-        const orderWithManagerName = {
-            ...order,
-            managerName: process.env.NEXT_PUBLIC_MANAGER_NAME,
-        };
+        // Send order confirmation email
+        await sendOrderConfirmationEmail(order);
 
-        return NextResponse.json(orderWithManagerName);
+        return NextResponse.json(order);
     } catch (error) {
-        console.error('Error creating order:', error);
+        console.error('Error creating email order:', error);
         return NextResponse.json({
-            error: 'Error creating order',
+            error: 'Error creating email order',
             details: error instanceof Error ? error.message : 'Unknown error'
         }, { status: 500 });
     }

@@ -20,6 +20,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { createWhatsAppOrder } from '@/lib/orderUtils'
+import { signIn } from 'next-auth/react'
 
 export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -80,17 +82,7 @@ export default function MenuPage() {
 
   const handleWhatsAppOrder = (item: MenuItem) => {
     if (session) {
-      const message = encodeURIComponent(
-        `Hello, I'd like to order:\n\n` +
-        `Item: ${item.name}\n` +
-        `Price: $${item.price.toFixed(2)}\n` +
-        `Category: ${item.category.name}\n` +
-        `Image: ${window.location.origin}${item.image}\n` +
-        `Full URL: ${window.location.origin}/menu/${item.id}\n\n` +
-        `Total: $${item.price.toFixed(2)}`
-      )
-      const whatsappUrl = `https://wa.me/22798241163?text=${message}`
-      window.open(whatsappUrl, '_blank')
+      router.push(`/order?id=${item.id}&quantity=1`);
     } else {
       setSelectedItem(item)
       setIsLoginDialogOpen(true)
@@ -98,11 +90,32 @@ export default function MenuPage() {
   }
 
   const handleLoginSuccess = () => {
-    setIsLoginDialogOpen(false)
+    setIsLoginDialogOpen(false);
     if (selectedItem) {
-      handleWhatsAppOrder(selectedItem)
+      router.push(`/order?id=${selectedItem.id}&quantity=1`);
     }
-  }
+  };
+
+  const handleLoginSubmit = async (email: string, password: string) => {
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
+      });
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+      handleLoginSuccess();
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: error instanceof Error ? error.message : "An error occurred during login. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleToggleFavorite = async (item: MenuItem) => {
     if (!session) {
@@ -219,7 +232,11 @@ export default function MenuPage() {
               Please log in or create an account to add favorites or order via WhatsApp.
             </DialogDescription>
           </DialogHeader>
-          <LoginForm onSuccess={handleLoginSuccess} />
+          <LoginForm
+            onSubmit={handleLoginSubmit}
+            isLoading={false}
+            onSuccess={handleLoginSuccess}
+          />
         </DialogContent>
       </Dialog>
     </div>
