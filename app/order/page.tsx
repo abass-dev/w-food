@@ -9,9 +9,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, AlertTriangle } from 'lucide-react'
 import { MenuItem } from '@/types/menu'
 import { createWhatsAppOrder, createEmailOrder } from '@/lib/orderUtils'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import Link from 'next/link'
+
+interface UserProfile {
+    id: string
+    name: string
+    email: string
+    image: string | null
+    phoneNumber: string | null
+    isVerified: boolean
+}
 
 export default function OrderPage() {
     const router = useRouter()
@@ -24,27 +35,40 @@ export default function OrderPage() {
     const [customerEmail, setCustomerEmail] = useState('')
     const [customerPhone, setCustomerPhone] = useState('')
     const [description, setDescription] = useState('')
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
 
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login?callbackUrl=/order')
         } else if (status === 'authenticated') {
-            const fetchMenuItem = async () => {
+            const fetchData = async () => {
                 const id = searchParams.get('id')
                 if (id) {
                     try {
-                        const response = await fetch(`/api/menu/${id}`)
-                        if (!response.ok) throw new Error('Failed to fetch menu item')
-                        const data = await response.json()
-                        setMenuItem(data)
+                        const [menuItemResponse, profileResponse] = await Promise.all([
+                            fetch(`/api/menu/${id}`),
+                            fetch('/api/user/profile')
+                        ])
+
+                        if (!menuItemResponse.ok || !profileResponse.ok) {
+                            throw new Error('Failed to fetch data')
+                        }
+
+                        const menuItemData = await menuItemResponse.json()
+                        const profileData = await profileResponse.json()
+
+                        setMenuItem(menuItemData)
+                        setUserProfile(profileData)
+                        console.log('User profile data:', profileData)
                         setQuantity(parseInt(searchParams.get('quantity') || '1', 10))
-                        setCustomerName(session.user.name || '')
-                        setCustomerEmail(session.user.email || '')
+                        setCustomerName(profileData.name || '')
+                        setCustomerEmail(profileData.email || '')
+                        setCustomerPhone(profileData.phoneNumber || '')
                     } catch (error) {
-                        console.error('Error fetching menu item:', error)
+                        console.error('Error fetching data:', error)
                         toast({
                             title: "Error",
-                            description: "Failed to load menu item. Please try again.",
+                            description: "Failed to load necessary data. Please try again.",
                             variant: "destructive",
                         })
                         router.push('/menu')
@@ -55,7 +79,7 @@ export default function OrderPage() {
                     router.push('/menu')
                 }
             }
-            fetchMenuItem()
+            fetchData()
         }
     }, [status, router, searchParams, session])
 
@@ -105,17 +129,56 @@ export default function OrderPage() {
         }
     };
 
+    const handleResendVerification = async () => {
+        try {
+            const response = await fetch('/api/auth/verify-email')
+            if (response.ok) {
+                toast({
+                    title: "Verification Email Sent",
+                    description: "Please check your inbox for the verification link.",
+                })
+            } else {
+                throw new Error('Failed to send verification email')
+            }
+        } catch (error) {
+            console.error('Error sending verification email:', error)
+            toast({
+                title: "Error",
+                description: "Failed to send verification email. Please try again.",
+                variant: "destructive",
+            })
+        }
+    }
+
     if (isLoading) {
         return <Loader2 className="h-8 w-8 animate-spin mx-auto mt-8" />
     }
 
-    if (!menuItem) {
-        return <div>Menu item not found.</div>
+    if (!menuItem || !userProfile) {
+        return <div>Menu item not found or failed to load user profile.</div>
     }
+
+    const canOrder = userProfile?.isVerified && userProfile?.phoneNumber
 
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-6">Confirm Your Order</h1>
+
+            {(!userProfile?.isVerified || !userProfile?.phoneNumber) && (
+                <Alert variant="destructive" className="mb-6">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Action Required</AlertTitle>
+                    <AlertDescription>
+                        {!userProfile?.isVerified && (
+                            <p>Your email is not verified. Please check your inbox for a verification email or <Button variant="link" className="p-0 h-auto font-normal" onClick={handleResendVerification}>click here to resend the verification email</Button>.</p>
+                        )}
+                        {!userProfile?.phoneNumber && (
+                            <p>You haven't set a phone number. Please <Link href="/profile" className="underline">update your profile</Link> to add a phone number.</p>
+                        )}
+                    </AlertDescription>
+                </Alert>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                     <Image
@@ -147,7 +210,8 @@ export default function OrderPage() {
                         <Input
                             id="customerName"
                             value={customerName}
-                            disabled
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            required
                         />
                     </div>
                     <div>
@@ -156,7 +220,8 @@ export default function OrderPage() {
                             id="customerEmail"
                             type="email"
                             value={customerEmail}
-                            disabled
+                            onChange={(e) => setCustomerEmail(e.target.value)}
+                            required
                         />
                     </div>
                     <div>
@@ -180,11 +245,11 @@ export default function OrderPage() {
                         />
                     </div>
                     <div className="flex space-x-4">
-                        <Button type="button" className="w-1/2" onClick={handleWhatsAppOrder} disabled={isLoading}>
+                        <Button type="button" className="w-1/2" onClick={handleWhatsAppOrder} disabled={isLoading || !canOrder}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             {isLoading ? 'Submitting...' : 'Order via WhatsApp'}
                         </Button>
-                        <Button type="button" className="w-1/2" onClick={handleEmailOrder} disabled={isLoading}>
+                        <Button type="button" className="w-1/2" onClick={handleEmailOrder} disabled={isLoading || !canOrder}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             {isLoading ? 'Submitting...' : 'Order via Email'}
                         </Button>

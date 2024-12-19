@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
     const token = req.nextUrl.searchParams.get('token')
 
     if (!token) {
-        return NextResponse.json({ error: 'Missing token' }, { status: 400 })
+        return NextResponse.redirect(new URL(`/auth/verify-email?status=error&message=${encodeURIComponent('Missing verification token')}`, req.url))
     }
 
     try {
@@ -14,11 +14,11 @@ export async function GET(req: NextRequest) {
         })
 
         if (!verificationToken) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
+            return NextResponse.redirect(new URL(`/auth/verify-email?status=error&message=${encodeURIComponent('Invalid token')}`, req.url))
         }
 
         if (verificationToken.expires < new Date()) {
-            return NextResponse.json({ error: 'Token expired' }, { status: 400 })
+            return NextResponse.redirect(new URL(`/auth/verify-email?status=expired&message=${encodeURIComponent('Token expired')}`, req.url))
         }
 
         await prisma.user.update({
@@ -26,14 +26,19 @@ export async function GET(req: NextRequest) {
             data: { isVerified: true, emailVerified: new Date() },
         })
 
+        console.log(`User ${verificationToken.identifier} email verified successfully`)
+
+        // Clear the user profile cache
+        await fetch(`${process.env.NEXTAUTH_URL}/api/user/clear-cache`, { method: 'POST' })
+
         await prisma.verificationToken.delete({
             where: { token },
         })
 
-        return NextResponse.json({ message: 'Email verified successfully' })
+        return NextResponse.redirect(new URL(`/auth/verify-email?status=success&message=${encodeURIComponent('Email verified successfully')}`, req.url))
     } catch (error) {
         console.error('Error verifying email:', error)
-        return NextResponse.json({ error: 'Error verifying email' }, { status: 500 })
+        return NextResponse.redirect(new URL(`/auth/verify-email?status=error&message=${encodeURIComponent('Error verifying email')}`, req.url))
     }
 }
 

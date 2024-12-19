@@ -28,6 +28,15 @@ export async function createWhatsAppOrder(menuItem: MenuItem, quantity: number, 
         const order = await response.json();
         console.log('Received order:', order);
 
+        // Send email to manager
+        await fetch('/api/send-order-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(order),
+        });
+
         const message = encodeURIComponent(
             `Hello, I'd like to confirm my order:
 

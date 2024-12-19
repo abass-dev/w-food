@@ -11,6 +11,7 @@ export async function GET() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+
     try {
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
@@ -20,12 +21,15 @@ export async function GET() {
                 email: true,
                 image: true,
                 phoneNumber: true,
+                isVerified: true,
             },
         })
 
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
+
+        console.log(`Fetching profile for user ${session.user.id}, isVerified: ${user.isVerified}`)
 
         return NextResponse.json(user)
     } catch (error) {
@@ -64,6 +68,7 @@ export async function PUT(req: NextRequest) {
                 throw new Error(`Failed to upload image: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`)
             }
         }
+
 
         console.log('Updating user profile in database')
         const updatedUser = await prisma.user.update({
